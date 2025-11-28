@@ -277,7 +277,7 @@ This subsection identifies requirements that are planned for future enhancement 
 
 ### Data format Diagram
 <p>
-<img src="./data_format.png" width="40%">
+<img src="./images/data_format.png" width="40%">
 </p>
 
 
@@ -523,7 +523,7 @@ This subsection identifies requirements that are planned for future enhancement 
 ### 3.3.4 Data Entities & Relationships
 
 <p>
-<img src="./data_entities.png" width="45%">
+<img src="./images/data_entities.png" width="45%">
 </p>
 
 ### 3.3.5 Integrity Constraints
@@ -594,7 +594,7 @@ This system does rely on some third party components as without them, it would b
 
 
 <p>
-<img src="./architecture.png/" width="40%">
+<img src="./images/architecture.png/" width="40%">
 </p>
 ---
 
@@ -644,7 +644,7 @@ This diagram shows how the system interacts with its external entities to the ca
 
 
 <p>
-<img src="./system_context.png" width="35%">
+<img src="./images/system_context.png" width="35%">
 </p>
 
 ## 5.3 High Level Data Flow Diagram
@@ -653,7 +653,7 @@ This section's diagram highlights the movement of data between the major subsyst
 
 
 <p>
-<img src="./data_flow.png" width="35%">
+<img src="./images/data_flow.png" width="35%">
 </p>
 
 
@@ -663,7 +663,7 @@ This diagram shows how each component interacts with each other in the calendar 
 
 
 <p>
-<img src="./component_interaction.png" width="35%">
+<img src="./images/component_interaction.png" width="35%">
 </p>
 
 
@@ -673,7 +673,7 @@ This diagram shows the subsystem modules and how they interact with 3rd party li
 
 
 <p>
-<img src="./system_arch.png" width="40%">
+<img src="./images/system_arch.png" width="40%">
 </p>
 
 ---
@@ -681,11 +681,11 @@ This diagram shows the subsystem modules and how they interact with 3rd party li
 # 6. Preliminary Schedule — Gantt Chart
 
 <p>
-<img src="./schedule_1.png" width="45%">
+<img src="./images/schedule_1.png" width="45%">
 </p>
 
 <p>
-<img src="./schedule_2.png" width="45%">
+<img src="./images/schedule_2.png" width="45%">
 </p>
 
 ---
