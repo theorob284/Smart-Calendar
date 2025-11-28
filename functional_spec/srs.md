@@ -75,7 +75,7 @@ A simplified block representation of the system in context is shown below. Inter
 
 ### System Block Diagram
 <p>
-<img src="./simple_block.png" width="25%">
+<img src="./images/simple_block.png" width="25%">
 </p>
 
 ### 2.1.1 System Interfaces
