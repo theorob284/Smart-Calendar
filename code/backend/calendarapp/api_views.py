@@ -3,11 +3,14 @@ from .models import Event
 from .serializers import EventSerializer
 
 from django.utils.dateparse import parse_datetime
+from django.utils.timezone import is_naive, make_aware
+from django.conf import settings
 from rest_framework.exceptions import ValidationError
 
 class EventViewSet(viewsets.ModelViewSet):
     #queryset = Event.objects.all().order_by("start_time") 
     serializer_class = EventSerializer
+
     ordered_Fields = {"start_time", "end_time", "title", "event_type", "location"}
 
     def get_queryset(self):
@@ -44,9 +47,15 @@ class EventViewSet(viewsets.ModelViewSet):
             #Ensure correct datetime:
             if start_dateTime is None or end_dateTime is None:
                 raise ValidationError(
-                    {"Error: Either start datetime or end datetime in incorrect format"}
+                    {"Error: Either start datetime or end datetime in incorrect format: start={start_param}, end={end_param}"}
                 )
             
+            if settings.USE_TZ:
+                if is_naive(start_dateTime):
+                    start_dateTime = make_aware(start_dateTime)
+                if is_naive(end_dateTime):
+                    end_dateTime = make_aware(end_dateTime)
+
             if end_dateTime <= start_dateTime:
                 raise ValidationError(
                     {"Error: End date time must happen after Start time"}
@@ -56,11 +65,16 @@ class EventViewSet(viewsets.ModelViewSet):
 
         ordering = self.request.query_params.get("ordering", "start_time")
 
-        raw_field = ordering[1:] if ordering.startswith("-") else ordering
+        raw_field = ordering.lstrip("-")
 
         if raw_field not in self.ordered_Fields:
             raise ValidationError(
-                {"detail": f"Invalid ordering field '{raw_field}'. Allowed: {sorted(self.ordered_Fields)}"}
+                {
+                    "detail": (
+                        f"Invalid ordering field '{raw_field}'. "
+                        f"Allowed: {sorted(self.ordered_Fields)}"
+                    )
+                }    
             )
 
         return queryset.order_by(ordering)

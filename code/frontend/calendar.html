@@ -27,10 +27,16 @@
         const calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
 
+            eventTimeFormat: {
+                hour: 'numeric',
+                minute: '2-digit',
+                meridiem: 'short'
+            },
+
             events: function(fetchInfo, successCallback, failureCallback) {
                 
    
-                const url = `http://127.0.0.1:8000/api/events/?start=${fetchInfo.startStr}&end=${fetchInfo.endStr}`;
+                const url = `http://127.0.0.1:8000/api/events/?start=${encodeURIComponent(fetchInfo.startStr)}&end=${encodeURIComponent(fetchInfo.endStr)}`;
 
                 console.log("DEBUG url:", url);
 
