@@ -46,9 +46,7 @@ class EventViewSet(viewsets.ModelViewSet):
 
             #Ensure correct datetime:
             if start_dateTime is None or end_dateTime is None:
-                raise ValidationError(
-                    {"Error: Either start datetime or end datetime in incorrect format: start={start_param}, end={end_param}"}
-                )
+                raise ValidationError( {"Error: Either start datetime or end datetime in incorrect format: start={start_param}, end={end_param}"})
             
             if settings.USE_TZ:
                 if is_naive(start_dateTime):
@@ -57,9 +55,7 @@ class EventViewSet(viewsets.ModelViewSet):
                     end_dateTime = make_aware(end_dateTime)
 
             if end_dateTime <= start_dateTime:
-                raise ValidationError(
-                    {"Error: End date time must happen after Start time"}
-                )
+                raise ValidationError({"Error: End date time must happen after Start time"})
             
             queryset = queryset.filter(start_time__lt=end_dateTime, end_time__gt=start_dateTime)
 

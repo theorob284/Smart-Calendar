@@ -13,8 +13,8 @@ class EventSerializer(serializers.ModelSerializer):
             "title",
             "start_time",
             "end_time",
-            "start",   # field for FullCallendar
-            "end",     # field for FullCallendar
+            "start", # field for FullCallendar
+            "end", # field for FullCallendar
             "location",
             "event_type",
             "confidence",
