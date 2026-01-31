@@ -1,13 +1,26 @@
+import {React, useEffect, useState} from 'react'
+import MyCalendar from './MyCalendar'
+import AxiosInstance from './AxiosInstance'
 
-import FullCalendar from '@fullcalendar/react'
-import dayGrid from '@fullcalendar/daygrid'
+const Calendar = () => {
 
-//This function handles the FullCalendar.js library 
-function Calendar() {
-  //const Calendar=()=>{<FullCalendar/>}
+  const [events, setEvents] = useState()
+
+  const GetData = () => {
+    AxiosInstance.get(`api/events/`).then((res) =>{
+      setEvents(res.data)
+      console.log(res.data)
+    })
+
+  }
+
+  useEffect(() =>{GetData();},[] )
+
   return (
-    <FullCalendar plugins={[ dayGrid ]} initialView="dayGridMonth"/>
-  );
+    <div>
+       <MyCalendar myEvents={events}/>
+    </div>
+  )
 }
 
-export default Calendar;
+export default Calendar
