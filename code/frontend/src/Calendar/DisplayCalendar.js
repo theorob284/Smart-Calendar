@@ -5,6 +5,7 @@ import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import multiMonthPlugin from '@fullcalendar/multimonth'
 
+
 const MyCalendar = ({myEvents}) => {
 
   return (
@@ -25,7 +26,7 @@ const MyCalendar = ({myEvents}) => {
 
         headerToolbar = {{
           left: 'prev,next' ,
-          center: 'title',
+          center: 'title', 
           right: 'dayGridMonth, timeGridWeek, listDay, multiMonth3'
         }}
     />
