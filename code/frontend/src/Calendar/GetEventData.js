@@ -5,20 +5,17 @@ import Upload from '../FileIngestion/FileUpload'
 
 const Calendar = () => {
 
-  const [events, setEvents] = useState()
+  const [events, setEvents] = useState([]);
+  const GetData = () => {
+    AxiosInstance.get("api/events/").then((res) => { setEvents(res.data); });
+  }
+
   const handleFileSelected = (file) => {
     console.log("Selected file:", file.name, file.type, file.size);
     //post to abckend here
   }
 
-  const GetData = () => {
-    AxiosInstance.get(`api/events/`).then((res) => 
-      {setEvents(res.data)
-      console.log(res.data)
-    })
-  }
-
-  useEffect(() =>{GetData();},[] )
+   useEffect(() => {GetData();}, []);
 
   return (
     <div> 

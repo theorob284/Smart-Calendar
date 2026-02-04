@@ -1,17 +1,10 @@
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
+from rest_framework import generics
 from rest_framework.parsers import MultiPartParser, FormParser
+from .models import Document
 from .serializers import DocumentSerializer
 
-class FileUploadAPIView(APIView):
+class FileUploadAPIView(generics.CreateAPIView):
+    queryset = Document.objects.all()
+    serializer_class = DocumentSerializer
     parser_classes = (MultiPartParser, FormParser)
 
-    def post(self, request):
-        serializer = DocumentSerializer(data=request.data)
-        if serializer.is_valid():
-            doc = serializer.save()
-            return Response({"id": doc.id, "title": doc.title, "filename": doc.uploaded_file.name,},
-                status=status.HTTP_201_CREATED,
-            )
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
