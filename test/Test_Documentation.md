@@ -37,6 +37,7 @@ This work correctly.
 #### Test 1.1.3: Testing of deletion of events
 
 Next we need to test if deletion of events work: EventDeletion
+
 <img src="images/Week1/EventDeletion.png" width="70%">
 
 Take a look at the green notification. This proves there was an event called Test and it isn't there anymore
@@ -122,5 +123,35 @@ This file tests that a title must be required, end time is after start time, and
 <img src ="images/Week2/ValidationCheck.png" width="80%">
 
 ## Week 3
-#### placeholder
 
+In week 3, the goal was to connect the Django backend API to a real user interface so that events could be visually displayed in a calendar instead of only through the admin panel or API endpoints.
+
+The outcome we wanted was to confirm that events created in the backend can be dynamically retrieved and shown on a frontend calendar using FullCalendar.js.
+
+### Frontend Calendar Integration
+
+#### Test 3.1.1: Testing calendar loads and displays events
+
+We created a minimal React frontend using FullCalendar.js, served with react-scripts, which fetches events from the Django API and displays them in a monthly calendar.
+
+The frontend is run using npm start, which starts the React development server at http://localhost:3000, while the Django backend runs at http://127.0.0.1:8000.
+
+If everything works correctly, events stored in the database should appear visually in a monthly calendar.
+
+<img src ="images/Week3/CalendarView.png" width="50%">
+
+As shown above, the calendar successfully loads and displays events from the backend.
+
+#### Test 3.1.2: Testing dynamic updates from backend to frontend
+
+Next, we tested that new events created via the API or Django admin appear automatically in the calendar.
+
+
+
+<img src ="images/Week3/NewEventAppears.png" width="50%">
+
+This proves the frontend is dynamically retrieving data from the backend.
+
+And the same for deleting events.
+
+<img src ="images/Week3/DeletedEvent.png" width="50%">
