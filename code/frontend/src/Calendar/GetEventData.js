@@ -14,7 +14,7 @@ const Calendar = () => {
     console.log("Selected file:", file.name, file.type, file.size);
     //post to abckend here
   }
-
+  
    useEffect(() => {GetData();}, []);
 
   return (

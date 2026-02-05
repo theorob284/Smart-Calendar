@@ -13,7 +13,7 @@ export default function Upload({onUploaded}) {
         try {
             setStatus("Uploading...")
             const data = await uploadFile(file)
-            setStatus("Uploaded (${data.title})")
+            setStatus(`Uploaded (${data.title})`)
             if (onUploaded) onUploaded();
         } catch (e) {
             console.error(e);
