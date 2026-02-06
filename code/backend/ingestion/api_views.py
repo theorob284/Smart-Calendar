@@ -25,6 +25,7 @@ class FileUploadAPIView(generics.CreateAPIView):
 
         if ext == ".ics":
             candidates = parse_ics(file_path)
+
         elif ext == ".pdf":
             text = extractPDF(file_path)
             # One candidate for now, later split
@@ -37,11 +38,14 @@ class FileUploadAPIView(generics.CreateAPIView):
                 "raw_text": text[:5000],  # avoid huge DB entry
             }]
         elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
-            ExtractedEventCandidate.objects.create(
-            document=doc,
-            title=f"OCR pending for image: {doc.title}",
-            raw_text="Image uploaded. OCR not implemented yet.",
-            confidence=0.0, )
+            candidates = [{
+                "title": f"OCR pending for image: {doc.title}",
+                "raw_text": "Image uploaded. OCR not implemented yet.",
+                "confidence": 0.0,
+                "start_time": None,
+                "end_time": None,
+                "location": "",
+            }]
         else:
             candidates = [{
                 "title": "Unsupported file type (stored only)",
