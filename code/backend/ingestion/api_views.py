@@ -1,8 +1,9 @@
 import os
-from rest_framework import generics
+from django.utils import timezone
+from rest_framework import generics, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
-from rest_framework import status
 
 from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer
@@ -85,14 +86,20 @@ class FileUploadAPIView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
-class CandidateListAPIView(generics.ListAPIView):
+class CandidateView(generics.ListAPIView):
     serializer_class = ExtractedEventCandidateSerializer
+    queryset = ExtractedEventCandidate.objects.all().order_by("id")
 
     def get_queryset(self):
 
-        qs = ExtractedEventCandidate.objects.all().order_by("id")
+        qs = super().get_queryset()
 
         document_id = self.request.query_params.get("document")
         if document_id:
             qs = qs.filter(document_id=document_id)
+
+        GetStatus = self.request.query_params.get("status")
+        if GetStatus:
+            qs = qs.filter(status=GetStatus)
+        
         return qs
