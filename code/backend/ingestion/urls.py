@@ -1,7 +1,11 @@
-from django.urls import path
-from .api_views import FileUploadAPIView, CandidateView
+from django.urls import path, include
+from .views import FileUploadAPIView, CandidateView
+from rest_framework.routers import DefaultRouter
+
+router = DefaultRouter()
+router.register(r"candidates", CandidateView, basename="candidate")
 
 urlpatterns = [
     path("uploads/", FileUploadAPIView.as_view(), name="file-upload-api"),
-    path("candidates/", CandidateView.as_view(),name="candidate-list" ),
+    path("", include(router.urls)),
 ]

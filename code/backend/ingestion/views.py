@@ -8,6 +8,7 @@ from rest_framework.response import Response
 from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer
 from .parsers import parse_ics, extractPDF
+from calendarapp.serializers import EventSerializer
 
 class FileUploadAPIView(generics.CreateAPIView):
     queryset = Document.objects.all()
@@ -86,7 +87,7 @@ class FileUploadAPIView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
-class CandidateView(generics.ListAPIView):
+class CandidateView(viewsets.ModelViewSet):
     serializer_class = ExtractedEventCandidateSerializer
     queryset = ExtractedEventCandidate.objects.all().order_by("id")
 
@@ -103,3 +104,50 @@ class CandidateView(generics.ListAPIView):
             qs = qs.filter(status=GetStatus)
         
         return qs
+    
+    def update(self, request, *args, **kwargs):
+        
+        cand = self.get_object()
+
+        if cand.status != ExtractedEventCandidate.Status.pending:
+            return Response({"error": "only candidates in the pending state can be edited"}, status=409)
+        
+        return super().update(request, *args, **kwargs)
+
+    @action(detail=True, methods=["post"])
+
+    def reject(self, request, pk=None):
+        cand = self.get_object()
+
+        cand.status = ExtractedEventCandidate.Status.rejected
+        cand.reviewed_at = timezone.now()
+        cand.save()
+
+        return Response(self.get_serializer(cand).data)
+    @action(detail=True, methods=["post"])
+
+    def accept(self, request, pk=None):
+        cand = self.get_object()
+
+        if cand.status == "pending":
+            return Response({"error": "only candidates in the pending state can be edited"}, status=409)
+        
+        ConvertToEvent = {
+            "title": cand.title,
+            "start_time": cand.start_time,
+            "end_time": cand.end_time,
+            "location": cand.location
+        }
+
+        serializer = EventSerializer(data=ConvertToEvent)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+
+        cand.status = ExtractedEventCandidate.Status.approved
+        cand.reviewed_at = timezone.now()
+        cand.save()
+
+        return Response({
+            "candidate": self.get_serializer(cand).data,
+            "event": serializer.data
+        }, status=201)

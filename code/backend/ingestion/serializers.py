@@ -10,4 +10,4 @@ class ExtractedEventCandidateSerializer(serializers.ModelSerializer):
     class Meta:
         model = ExtractedEventCandidate
         fields = "__all__"
-        ReadView = ["status", "reviewed_at", "approveEvent", "created_at", "updated_at"]
+        read_only_fields = ["status", "reviewed_at", "approveEvent", "created_at", "updated_at"]

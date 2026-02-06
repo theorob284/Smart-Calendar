@@ -36,5 +36,5 @@ class ExtractedEventCandidate(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return f"Candidate {self.id} ({self.Status}) from Doc {self.document_id}: {self.title}"
+        return f"Candidate {self.id} ({self.status}) from Doc {self.document_id}: {self.title}"
 
