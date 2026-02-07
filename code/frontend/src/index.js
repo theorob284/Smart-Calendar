@@ -1,15 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import Calendar from './Calendar/GetEventData';
 import reportWebVitals from './reportWebVitals';
-import Upload from './FileIngestion/FileUpload';
+import App from './App';
+import { BrowserRouter } from 'react-router';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-      
-    <Calendar />
+    <BrowserRouter>
+      <App/>
+    </BrowserRouter>
   </React.StrictMode>
   
 );
