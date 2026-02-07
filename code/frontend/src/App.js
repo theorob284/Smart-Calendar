@@ -9,6 +9,7 @@ export default function App() {
     <Routes>
       <Route path="/" element={<Calendar />} />
       <Route path="/review/:docID" element={<CheckExtractedEvent />} />
+      <Route path="/edit/:docID" element={<CheckExtractedEvent />} />
     </Routes>
   );
 }
