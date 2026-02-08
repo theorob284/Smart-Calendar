@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import AxiosInstance from '../Calendar/AxiosInstance'
 import {useParams} from "react-router-dom"
 import { useNavigate } from 'react-router-dom'
@@ -17,9 +17,12 @@ export default function CheckExtractedEvent() {
       description: ""
     })
 
-    const GetData = () => {AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => { setCheckEvent(res.data);});}
+    const GetData = useCallback(() => {
+      AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => { 
+        setCheckEvent(res.data);});
+      }, [docID]);
 
-    useEffect(() => {GetData();}, [docID]);
+    useEffect(() => {GetData();}, [GetData]);
 
     const updateStatus = (id) => {
       setCheckEvent(prev => {const updated = prev.filter(c => c.id !== id);

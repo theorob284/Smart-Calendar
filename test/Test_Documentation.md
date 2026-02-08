@@ -2,6 +2,15 @@
 ### This file shows our testing week by week in the format Week.ItemToTest.TestNumber (x.y.z)
 for example, 1.1.2, shows week 1, function e.g. create event, test 2
 
+### Types of Testing Used
+
+Unit testing: testing individual components such as models and validation logic using Django's testing framework
+
+Integration testing: testing interaction between backend, database and frontend
+
+Manual functional testing: manually testing features through UI and API endpoints
+
+
 ## Week 1
 The goal of week 1 was to get the django backend foundation working with the following models/functions:
 
@@ -110,11 +119,12 @@ By following the same url as before, we will delete event with id 5:
 And we are back to where we started in the event list, meaning deletion of events works fine.
 That is all the api endpoints tested
 
-### Validation rule testing
+### Validation rule testing (Unit Testing)
 
 #### Test 2.2.1: tests.py file
 
 For the validation rule testing, we have written code found in code/backend/calendarapp/tests.py
+This containts automated unit tests
 
 To run: python manage.py test calendarapp
 
@@ -128,7 +138,7 @@ In week 3, the goal was to connect the Django backend API to a real user interfa
 
 The outcome we wanted was to confirm that events created in the backend can be dynamically retrieved and shown on a frontend calendar using FullCalendar.js.
 
-### Frontend Calendar Integration
+### Frontend Calendar (Integration Testing)
 
 #### Test 3.1.1: Testing calendar loads and displays events
 
@@ -146,8 +156,6 @@ As shown above, the calendar successfully loads and displays events from the bac
 
 Next, we tested that new events created via the API or Django admin appear automatically in the calendar.
 
-
-
 <img src ="images/Week3/NewEventAppears.png" width="50%">
 
 This proves the frontend is dynamically retrieving data from the backend.
@@ -155,3 +163,114 @@ This proves the frontend is dynamically retrieving data from the backend.
 And the same for deleting events.
 
 <img src ="images/Week3/DeletedEvent.png" width="50%">
+
+
+## Week 4
+
+In week 4, the goal was to implement the file upload pipeline in the Django backend. This includes uploading files, storing them, processing them through the ingestion logic, and making the extracted data available.
+
+Our aim was to enable file uploading successfully, store them in the backend, and process them so that extracted data exists in the system.
+
+### File Upload & Ingestion (Integration Testing)
+
+
+#### Test 4.1.1: Testing file upload storage
+
+We test whether files are being stored after upload.
+We check if the file appears inside the media folder in the backend, as well as that a corresponding file record exists in the database (via Django admin)
+
+The file appearing in the media directory confirms file storage is working correctly:
+
+<img src="images/Week4/MediaFolderCheck.png" width="50%">
+
+As well as in the database:
+
+<img src="images/Week4/DjangoCheck.png" width="60%">
+
+#### Test 4.1.2: Testing extracted data creation
+
+After confirming the file uploads correctly, we check whether extracted data is created, specifically, we verify that a new ExtractedData entry is created in the system, as well as that the extracted content can be viewed (via API)
+
+
+<img src="images/Week4/ExtrDataCheck.png" width="50%">
+
+Confirming that the ingestion process works.
+
+
+#### Test 4.1.3: Testing frontend file ingestion view
+
+We test the frontend view of uploading a file. Specifically that a file can be selected and uploaded, as well as the extracted data can be reviewed in the interface.
+
+<img src="images/Week4/FrontendCheck.png" width="50%">
+
+The extracted information appears on the frontend, confirming that the front- and backend are connected properly.
+
+
+## Week 5
+
+In week 5, we implemented converting file data into event candidates and allowing the user to validate them before creating real calendar events.
+
+The goal was that the user coul review, edit, approve or reject the data extracted from uploaded files. 
+
+If approved, a real Event is created in the system.
+
+### Event Candidate Extraction
+
+#### Test 5.1.1: Testing candidate creation from extracted data
+
+After uploading a file and confirming ExtractedData exists (Test 4.1.2), we test whether event candidates are automatically generated from the extracted text.
+
+We check that the event is created in the database, contains needed fields (title, start, end, etc.), and confidence score is stored.
+
+<img src="images/Week5/CandidateCreation.png" width="50%">
+
+Confirming that the extracted text was successfully converted into structured event candidates.
+This also confirms that candidate approval successfully creates a real calendar event.
+
+### Candidate API Endpoints
+
+#### Test 5.1.2: Testing approve candidate
+
+See Test 5.1.1
+
+#### Test 5.1.3: Testing reject candidate
+
+Rejection works:
+
+<img src="images/Week5/Rejection.png" width="50%">
+
+
+#### Test 5.1.4: Tesing edit candidate before approval
+
+We test editing a candidate's fields before approving.
+
+<img src="images/Week5/EditApproval.png" width="50%">
+
+This confirms that the final Event matches the updated candidate data
+
+#### Test 5.2.1: Testing validation page
+
+1. Validation page appears:
+
+<img src="images/Week5/ValidationPage.png" width="50%">
+
+2. Rejection of an event does not create the event.
+
+3. The event appears on the calendar after approval: 
+
+<img src="images/Week5/EventFrontend.png" width="50%">
+
+As well as on the backend:
+
+<img src="images/Week5/EventBackend.png" width="50%">
+
+
+3. Editing an event:
+
+<img src="images/Week5/EditEvent.png" width="50%">
+
+The validation page is fully functional
+
+
+
+
