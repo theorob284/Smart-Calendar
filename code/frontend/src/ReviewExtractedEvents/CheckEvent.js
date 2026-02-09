@@ -6,16 +6,18 @@ import { useNavigate } from 'react-router-dom'
 export default function CheckExtractedEvent() {
 
     const navigate = useNavigate();
-    const [checkevent, setCheckEvent] = useState([])
+    const [checkevent, setCheckEvent] = useState([]);
+    const [accepting, setAccepting] = useState(false);
+    const [counter, setCounter] = useState(0);
     const {docID} = useParams();
-    const [editId, setEditId] = useState(null)
+    const [editId, setEditId] = useState(null);
     const [form, setForm] = useState({
       title: "",
       start_time: "",
       end_time: "",
       location: "",
       description: ""
-    })
+    });
 
     const GetData = useCallback(() => {
       AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => { 
@@ -35,6 +37,20 @@ export default function CheckExtractedEvent() {
     const accept = async (id) => {
       await AxiosInstance.post(`/api/candidates/${id}/accept/`)
       updateStatus(id);
+    }
+
+    const AcceptAll = async () => {
+      setAccepting(true);
+      setCounter(0);
+      
+      for (const cand of checkevent){
+        const id = cand.id
+        await AxiosInstance.post(`/api/candidates/${id}/accept/`)
+        setCounter(prev => prev + 1);
+        updateStatus(id);
+      }
+
+      setAccepting(false);
     }
 
     const edit = async (id) => {
@@ -58,9 +74,19 @@ export default function CheckExtractedEvent() {
     return (
       <div>
         <h1>Check Event</h1>
+        <div>
+          <button onClick={AcceptAll} disabled = {accepting} >Accept all Events</button>
+          {accepting && (
+            <>
+              <p>Processing {counter} of {setCheckEvent.length}</p>
+            </>
+          )}
+
+        </div>
 
         {checkevent.map(c => (
           <div key={c.id}>
+
 
             {editId === c.id ? (
               <div>
@@ -80,7 +106,6 @@ export default function CheckExtractedEvent() {
                 <p>{c.end_time}</p>
                 <p>{c.location}</p>
                 <p>{c.raw_text}</p>
-
                 <button onClick={() => accept(c.id)}>Accept</button>
 
                 <button onClick={() => {setEditId(c.id)
@@ -98,6 +123,7 @@ export default function CheckExtractedEvent() {
             )}
           </div>
         ))}
+  
       </div>
     );
 }
