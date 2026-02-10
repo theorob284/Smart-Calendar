@@ -13,3 +13,8 @@ install axios: npm install axios
 Django file ingestion: https://pythonguides.com/django-app-upload-files/
 React button component: https://mui.com/material-ui/react-button/
 Sending file to django backend: https://joetatusko.com/2024/01/29/how-to-send-file-objects-from-a-react-frontend-to-django-backend/
+
+pip install icalendar
+pip install pypdf
+python -m pip install pillow
+

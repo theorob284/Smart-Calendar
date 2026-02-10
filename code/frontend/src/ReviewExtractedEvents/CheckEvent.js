@@ -9,8 +9,10 @@ export default function CheckExtractedEvent() {
     const [checkevent, setCheckEvent] = useState([]);
     const [accepting, setAccepting] = useState(false);
     const [counter, setCounter] = useState(0);
+    const [conflictbyid, setConflictById] = useState({});
     const {docID} = useParams();
     const [editId, setEditId] = useState(null);
+    const [createdevents, setCreatedEvents] = useState([]);
     const [form, setForm] = useState({
       title: "",
       start_time: "",
@@ -24,7 +26,54 @@ export default function CheckExtractedEvent() {
         setCheckEvent(res.data);});
       }, [docID]);
 
+    
+    const CheckConflict = () => {
+      const result = {};
+      for (const pending of checkevent){
+      
+        if (!pending.start_time || !pending.end_time) {
+          result[pending.id] = 0;
+          continue
+        }
+        const pendingStart = new Date(pending.start_time).getTime();
+        const pendingEnd = new Date(pending.end_time).getTime();
+
+        let conflictCounter = 0;
+        for (const events of createdevents) {
+          if (!events.start_time || !events.end_time) continue;
+
+          const eventStart = new Date(events.start_time).getTime();
+          const eventEnd = new Date(events.end_time).getTime();
+
+          const conflict = pendingStart < eventEnd && pendingEnd > eventStart;
+          if (conflict) {
+            conflictCounter += 1;
+          } 
+        }
+
+        for (const pend of checkevent){
+          if (pend.id === pending.id || !pend.start_time || !pend.end_time ){
+            continue;
+          } 
+          const selfPendStart = new Date(pend.start_time).getTime();
+          const selfPendEnd = new Date(pend.end_time).getTime();
+
+          const pendConflict = pendingStart < selfPendEnd && pendingEnd > selfPendStart;
+
+          if (pendConflict){
+            conflictCounter += 1;
+          }
+        }
+        
+        result[pending.id] = conflictCounter;
+      }
+
+      setConflictById(result);
+    }
     useEffect(() => {GetData();}, [GetData]);
+    useEffect(() => {AxiosInstance.get(`/api/events/`).then((res) => {setCreatedEvents(res.data);});}, []);
+    useEffect(() => {CheckConflict();}, [checkevent, createdevents]);
+
 
     const updateStatus = (id) => {
       setCheckEvent(prev => {const updated = prev.filter(c => c.id !== id);
@@ -74,11 +123,12 @@ export default function CheckExtractedEvent() {
     return (
       <div>
         <h1>Check Event</h1>
+
         <div>
           <button onClick={AcceptAll} disabled = {accepting} >Accept all Events</button>
           {accepting && (
             <>
-              <p>Processing {counter} of {setCheckEvent.length}</p>
+              <p>Processing {counter} of {checkevent.length}</p>
             </>
           )}
 
@@ -106,6 +156,8 @@ export default function CheckExtractedEvent() {
                 <p>{c.end_time}</p>
                 <p>{c.location}</p>
                 <p>{c.raw_text}</p>
+                <p>Conflicts: {conflictbyid[c.id] ?? 0}</p>
+
                 <button onClick={() => accept(c.id)}>Accept</button>
 
                 <button onClick={() => {setEditId(c.id)
