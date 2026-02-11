@@ -10,16 +10,10 @@ const Calendar = () => {
     AxiosInstance.get("api/events/").then((res) => { setEvents(res.data); });
   }
 
-  const handleFileSelected = (file) => {
-    console.log("Selected file:", file.name, file.type, file.size);
-    
-  }
-  
    useEffect(() => {GetData();}, []);
 
   return (
     <div> 
-      <Upload onFileSelected={handleFileSelected} />
       <MyCalendar myEvents={events}/>
     </div>)
 }
