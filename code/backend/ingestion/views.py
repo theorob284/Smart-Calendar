@@ -178,20 +178,60 @@ class SmartPlanView(APIView):
         selected = []
         skipped = []
 
-        for cand in CandidateSet:
-            if not cand.start_time or not cand.end_time:
-                skipped.append({
-                    "candidate_id": cand.id,
-                    "reason": "missing_time"
-                })
+        def candConfidence(c):
+            if c.confidence is not None:
+                return float(c.confidence)
+            else:
+                return 0.5
+            
+        candidates = list(CandidateSet)
+        candidates.sort(key=lambda c: (-candConfidence(c), c.start_time or timezone.now()))
+        
+        selected_ranges = []
+
+        for cand in candidates:
+            if not cand.title:
+                skipped.append({"candidate_id": cand.id, "reason": "no_title"})
                 continue
+    
+            if not cand.start_time or not cand.end_time:
+                skipped.append({"candidate_id": cand.id,"reason": "missing_time"})
+                continue
+
+            if cand.end_time <= cand.start_time:
+                skipped.append({"candidate_id": cand.id,"reason": "invalid_timerange"})
+                continue
+            
+            SelectedConflicts = False
+            for (start, end) in selected_ranges:
+                if cand.start_time < end and cand.end_time > start: #overlaps
+                    SelectedConflicts = True
+                    break
+            
+            if SelectedConflicts:
+                skipped.append({"candidate_id": cand.id, "reason": "Conflicts"})
+                continue
+            
+            ExistingConflicts = False
+            if data["ExistingEvents"]:
+                for ev in existing:
+                    if cand.start_time < ev.end_time and cand.end_time > ev.start_time: #overlaps
+                        ExistingConflicts = True
+                        break
+            
+            if ExistingConflicts:
+                skipped.append({"candidate_id": cand.id, "reason": "Conflicts"})
+                continue
+
+
             selected.append({
                 "candidate_id": cand.id,
                 "title": cand.title,
                 "start_time": cand.start_time,
                 "end_time": cand.end_time,
-                "confidence": float(cand.confidence or 0.5)
+                "confidence": candConfidence(cand)
             })
+            selected_ranges.append((cand.start_time, cand.end_time))
         
         plan = {
             "selected": selected,
