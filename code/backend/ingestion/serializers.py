@@ -12,7 +12,7 @@ class ExtractedEventCandidateSerializer(serializers.ModelSerializer):
         fields = "__all__"
         read_only_fields = ["status", "reviewed_at", "approveEvent", "created_at", "updated_at"]
 
-class SmartPlanSerializer(serializers.ModelSerializer):
+class SmartPlanSerializer(serializers.Serializer):
 
     GetDocumentIds = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     ExistingEvents = serializers.BooleanField(default=True)

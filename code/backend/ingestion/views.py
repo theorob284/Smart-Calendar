@@ -167,7 +167,7 @@ class SmartPlanView(APIView):
 
         CandidateSet = ExtractedEventCandidate.objects.filter(
             status=ExtractedEventCandidate.Status.pending,
-            document_id__in=data["document_ids"]
+            document_id__in=data["GetDocumentIds"]
         )
 
         if data["ExistingEvents"]:

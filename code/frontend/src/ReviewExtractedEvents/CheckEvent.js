@@ -21,6 +21,11 @@ export default function CheckExtractedEvent() {
       description: ""
     });
 
+    //smart generation
+    const [plan, setPlan] = useState(null);
+    const [planning, setPlanning] = useState(false)
+    const [useExisting, setUseExisting] = useState(true)
+
     const GetData = useCallback(() => {
       AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => { 
         setCheckEvent(res.data);});
@@ -120,18 +125,61 @@ export default function CheckExtractedEvent() {
       updateStatus(id);
     }
 
+    const generatePlan = async () => {
+      setPlanning(true);
+
+      const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)], ExistingEvents: useExisting})
+      setPlan(res.data);
+      setPlanning(false);
+    }
+
+    const applyPlan = async () => {
+      if (!plan?.selected) return;
+
+      for (const item of plan.selected) {
+        await AxiosInstance.post(`/api/candidates/${item.candidate_id}/accept/`);
+      }
+
+      await GetData()
+      const eventRes = await AxiosInstance.get("/api/events/");
+      setCreatedEvents(eventRes.data);
+      setPlan(null);
+    }
+
     return (
       <div>
         <h1>Check Event</h1>
 
         <div>
           <button onClick={AcceptAll} disabled = {accepting} >Accept all Events</button>
-          {accepting && (
-            <>
-              <p>Processing {counter} of {checkevent.length}</p>
-            </>
-          )}
+          {accepting && (<><p>Processing {counter} of {checkevent.length}</p></>)}
 
+        </div>
+
+        <div style={{ marginTop: 12 }}>
+          <label>
+            <input
+              type="checkbox"
+              checked={useExisting}
+              onChange={(e) => setUseExisting(e.target.checked)}
+            />
+            Respect existing events
+          </label>
+
+          <button onClick={generatePlan} disabled={planning}>
+            {planning ? "Planning..." : "Generate Smart Plan"}
+          </button>
+
+          {plan && (
+            <div style={{ marginTop: 12, padding: 8, border: "1px solid #ccc" }}>
+              <p><b>Smart Plan</b></p>
+              <p>Selected: {plan.stats?.selected_count ?? plan.selected?.length ?? 0}</p>
+              <p>Skipped: {plan.stats?.skipped_count ?? plan.skipped?.length ?? 0}</p>
+
+              <button onClick={applyPlan}>Apply Smart Build</button>
+              <button onClick={() => setPlan(null)}>Clear</button>
+            </div>
+          )}
         </div>
 
         {checkevent.map(c => (
