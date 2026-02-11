@@ -6,12 +6,17 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive, make_aware
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
+from .utils import CreateConflictRecord
 
 class EventViewSet(viewsets.ModelViewSet):
     #queryset = Event.objects.all().order_by("start_time") 
     serializer_class = EventSerializer
 
     ordered_Fields = {"start_time", "end_time", "title", "event_type", "location"}
+
+    def perform_create(self, serializer):
+        event = serializer.save()
+        CreateConflictRecord(event)
 
     def get_queryset(self):
         queryset = Event.objects.all()

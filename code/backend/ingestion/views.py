@@ -9,6 +9,7 @@ from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer
 from .parsers import parse_ics, extractPDF
 from calendarapp.serializers import EventSerializer
+from calendarapp.utils import CreateConflictRecord
 
 class FileUploadAPIView(generics.CreateAPIView):
     queryset = Document.objects.all()
@@ -129,22 +130,26 @@ class CandidateView(viewsets.ModelViewSet):
     def accept(self, request, pk=None):
         cand = self.get_object()
 
-        if cand.status == "pending":
+        if cand.status != ExtractedEventCandidate.Status.pending:
             return Response({"error": "only candidates in the pending state can be edited"}, status=409)
         
         ConvertToEvent = {
             "title": cand.title,
             "start_time": cand.start_time,
             "end_time": cand.end_time,
-            "location": cand.location
+            "location": cand.location,
+            "confidence": cand.confidence
         }
 
         serializer = EventSerializer(data=ConvertToEvent)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        event = serializer.save()
+
+        CreateConflictRecord(event)
 
         cand.status = ExtractedEventCandidate.Status.approved
         cand.reviewed_at = timezone.now()
+        cand.approveEvent = event
         cand.save()
 
         return Response({

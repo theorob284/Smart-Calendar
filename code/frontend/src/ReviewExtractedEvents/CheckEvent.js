@@ -74,7 +74,6 @@ export default function CheckExtractedEvent() {
     useEffect(() => {AxiosInstance.get(`/api/events/`).then((res) => {setCreatedEvents(res.data);});}, []);
     useEffect(() => {CheckConflict();}, [checkevent, createdevents]);
 
-
     const updateStatus = (id) => {
       setCheckEvent(prev => {const updated = prev.filter(c => c.id !== id);
       if (updated.length === 0) {
@@ -93,6 +92,7 @@ export default function CheckExtractedEvent() {
       setCounter(0);
       
       for (const cand of checkevent){
+
         const id = cand.id
         await AxiosInstance.post(`/api/candidates/${id}/accept/`)
         setCounter(prev => prev + 1);
