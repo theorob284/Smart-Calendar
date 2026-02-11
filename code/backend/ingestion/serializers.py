@@ -14,7 +14,7 @@ class ExtractedEventCandidateSerializer(serializers.ModelSerializer):
 
 class SmartPlanSerializer(serializers.ModelSerializer):
 
-    GetDocumentIds = serializers.ListField(chile=serializers.IntegerField(), allow_empty=False)
+    GetDocumentIds = serializers.ListField(child=serializers.IntegerField(), allow_empty=False)
     ExistingEvents = serializers.BooleanField(default=True)
     ConflictPenalty = serializers.FloatField(default=1.0)
     ConfidenceWeight = serializers.FloatField(default=1.0)

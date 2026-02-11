@@ -4,11 +4,13 @@ from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
+from rest_framework.views import APIView
 
 from .models import Document, ExtractedEventCandidate
-from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer
+from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer, SmartPlanSerializer
 from .parsers import parse_ics, extractPDF
 from calendarapp.serializers import EventSerializer
+from calendarapp.models import Event
 from calendarapp.utils import CreateConflictRecord
 
 class FileUploadAPIView(generics.CreateAPIView):
@@ -156,3 +158,49 @@ class CandidateView(viewsets.ModelViewSet):
             "candidate": self.get_serializer(cand).data,
             "event": serializer.data
         }, status=201)
+    
+class SmartPlanView(APIView):
+    def post(self, request):
+        SmartSerializer = SmartPlanSerializer(data=request.data)
+        SmartSerializer.is_valid(raise_exception=True)
+        data = SmartSerializer.validated_data
+
+        CandidateSet = ExtractedEventCandidate.objects.filter(
+            status=ExtractedEventCandidate.Status.pending,
+            document_id__in=data["document_ids"]
+        )
+
+        if data["ExistingEvents"]:
+            existing = Event.objects.all()
+        else:
+            existing = []
+        
+        selected = []
+        skipped = []
+
+        for cand in CandidateSet:
+            if not cand.start_time or not cand.end_time:
+                skipped.append({
+                    "candidate_id": cand.id,
+                    "reason": "missing_time"
+                })
+                continue
+            selected.append({
+                "candidate_id": cand.id,
+                "title": cand.title,
+                "start_time": cand.start_time,
+                "end_time": cand.end_time,
+                "confidence": float(cand.confidence or 0.5)
+            })
+        
+        plan = {
+            "selected": selected,
+            "skipped": skipped,
+            "stats": {
+                "total_candidates": CandidateSet.count(),
+                "selected_count": len(selected),
+                "skipped_count": len(skipped)
+            }
+        }
+
+        return Response(plan, status=status.HTTP_200_OK)
