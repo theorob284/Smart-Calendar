@@ -67,7 +67,7 @@ Hour24Regex = r"\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\:[0-5]\d)?\b"
 timeRangeRegex = rf"(?:from\s+)?({timeRegex}|{Hour24Regex})\s*(?:to|-|–)\s*({timeRegex}|{Hour24Regex})"
 
 # Locations
-locationRegex = r"\b(?:in|at|inside)\s+([A-Z][A-Za-z0-9\s&\-]+?)(?:\.|,|$)"
+locationRegex = r"\b(?:location|venue|address)\s*:\s*(.+?)(?=\s+(?:at|from|to|by|starting)\b|[.,;]|$)|\b(?:in|at|inside)\s+(?:the\s+)?(.+?)(?=\s+(?:at|from|to|by|starting)\b|[.,;]|$)"
 
 def extractPDF(path):
 
@@ -102,7 +102,11 @@ def _FindTimeRange(sentence):
 
 def _FindLocation(sentence):
     find = re.search(locationRegex, sentence)
-    return find.group(1).strip() if find else ""
+    if not find:
+        return ""
+    loc = find.group(1) or find.group(2) or ""
+    loc = re.sub(r"\s+", " ", loc).strip(" ,.-")
+    return loc
 
 def _GuessTitle(sentence, date, start):
     if date:
