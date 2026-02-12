@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 
 from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer, SmartPlanSerializer
-from .parsers import parse_ics, extractPDF, pdfTextToEvent
+from .parsers import parse_ics, extractPDF, ExtractedTextToEvent, extractOCR
 from calendarapp.serializers import EventSerializer
 from calendarapp.models import Event
 from calendarapp.utils import CreateConflictRecord
@@ -34,7 +34,7 @@ class FileUploadAPIView(generics.CreateAPIView):
         elif ext == ".pdf":
             text = extractPDF(file_path)
             # One candidate for now, later split
-            candidates = pdfTextToEvent(text)
+            candidates = ExtractedTextToEvent(text)
             if not candidates:
                 candidates = [{
                     "title": f"Imported from {doc.title}",
@@ -45,14 +45,17 @@ class FileUploadAPIView(generics.CreateAPIView):
                     "raw_text": text[:5000],  # avoid huge DB entry
                 }]
         elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
-            candidates = [{
-                "title": f"OCR pending for image: {doc.title}",
-                "raw_text": "Image uploaded. OCR not implemented yet.",
-                "confidence": 0.0,
-                "start_time": None,
-                "end_time": None,
-                "location": "",
-            }]
+            text = extractOCR(file_path)
+            candidates = ExtractedTextToEvent(text)
+            if not candidates:
+                candidates = [{
+                    "title": f"OCR pending for image: {doc.title}",
+                    "raw_text": "Image uploaded. OCR not implemented yet.",
+                    "confidence": 0.0,
+                    "start_time": None,
+                    "end_time": None,
+                    "location": "",
+                }]
         else:
             candidates = [{
                 "title": "Unsupported file type (stored only)",

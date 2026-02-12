@@ -2,8 +2,9 @@ from datetime import timedelta
 from icalendar import Calendar
 import pdfplumber
 from PIL import Image
+import pytesseract
 import re
-from datetime import datetime, timedelta
+from datetime import timedelta
 from dateutil import parser as dparse
 
 def parse_ics(file_path):
@@ -119,7 +120,7 @@ def _GuessTitle(sentence, date, start):
 
     return (sentence[:60] or "Imported event").strip()
 
-def pdfTextToEvent(text, defaultDuration: int = 60):
+def ExtractedTextToEvent(text, defaultDuration: int = 60):
 
     candidates = []
     sentences = _SplitSenteces(text)
@@ -159,3 +160,25 @@ def pdfTextToEvent(text, defaultDuration: int = 60):
             "raw_text": sent[:5000]
         })
     return candidates
+"""
+def extractPDF(path):
+
+    text_parts = []
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text(layout=True)
+            if page_text:
+                text_parts.append(page_text)
+        return "\n".join(text_parts)
+"""
+
+def extractOCR(image):
+
+    text_parts = []
+    img = Image.open(image)
+    text = pytesseract.image_to_string(img)
+    if text:
+        text_parts.append(text)
+        return "\n".join(text_parts)
+    return ""
+
