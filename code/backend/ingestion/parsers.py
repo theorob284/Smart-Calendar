@@ -76,7 +76,7 @@ def extractPDF(path):
         for page in pdf.pages:
             page_text = page.extract_text(layout=True)
             if page_text:
-                text_parts.append(page.extract_text() or "")
+                text_parts.append(page_text)
         return "\n".join(text_parts)
     
 def _SplitSenteces(text):
@@ -92,12 +92,12 @@ def _FindDate(sentence):
 
 def _GetSingleTime(sentence):
     find = re.search(timeRegex, sentence)
-    return find.group(0)
+    return find.group(0) if find else None
 
 def _FindTimeRange(sentence):
     find = re.search(timeRangeRegex, sentence)
     if find:
-        return find.group(1).find.group(2)
+        return find.group(1), find.group(2)
     return None, None
 
 def _FindLocation(sentence):
@@ -136,20 +136,20 @@ def pdfTextToEvent(text, defaultDuration: int = 60):
             if not SingleTime:
                 continue
 
-            StartTime = dparse.parse(f"{date} {SingleTime}", dayfirst=True, fuzzy=True)
-            EndTime = StartTime + timedelta(minutes=defaultDuration)
+            start = dparse.parse(f"{date} {SingleTime}", dayfirst=True, fuzzy=True)
+            end = start + timedelta(minutes=defaultDuration)
             confidence = 0.70
         
         location = _FindLocation(sent)
         if location:
             confidence += 0.05
         
-        title = _GuessTitle(sent, date, StartTime or _GetSingleTime)
+        title = _GuessTitle(sent, date, StartTime or _GetSingleTime(sent))
 
         candidates.append({
             "title": title,
-            "start_time": StartTime,
-            "end_time": EndTime,
+            "start_time": start,
+            "end_time": end,
             "location": location,
             "confidence": min(confidence, 0.95),
             "raw_text": sent[:5000]
