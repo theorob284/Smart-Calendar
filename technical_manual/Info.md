@@ -13,3 +13,12 @@ install axios: npm install axios
 Django file ingestion: https://pythonguides.com/django-app-upload-files/
 React button component: https://mui.com/material-ui/react-button/
 Sending file to django backend: https://joetatusko.com/2024/01/29/how-to-send-file-objects-from-a-react-frontend-to-django-backend/
+pdfparser: https://www.npmjs.com/package/pdf-parse
+
+For parsing from .ics files: pip install icalendar
+pdf parsing: pip install pypdf
+
+react router: npm i react-router
+npm install react-router-dom
+
+Navbar guide: https://dev.to/udoka_emmanuel/how-to-build-a-navigation-bar-in-react-a-step-by-step-guide-2pcp
