@@ -1,6 +1,6 @@
 from datetime import timedelta
 from icalendar import Calendar
-from pypdf import PdfReader
+import pdfplumber
 from PIL import Image
 
 def parse_ics(file_path):
@@ -39,10 +39,12 @@ def parse_ics(file_path):
 
     return results
 
-def extractPDF(file_path):
+def extractPDF(path):
 
-    reader = PdfReader(file_path)
     text_parts = []
-    for page in reader.pages:
-        text_parts.append(page.extract_text() or "")
-    return "\n".join(text_parts)
+    with pdfplumber.open(path) as pdf:
+        for page in pdf.pages:
+            page_text = page.extract_text()
+            if page_text:
+                text_parts.append(page.extract_text() or "")
+        return "\n".join(text_parts)
