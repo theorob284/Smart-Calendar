@@ -30,12 +30,13 @@ export default function Upload({onUploaded}) {
     }
 
     return (
-        <div style={{ padding: 12 }}>
+    <div style={{ padding: 12 }}>
       <label>
         <span>Import file: </span>
         <input type="file" accept=".pdf,image/*,.ics" onChange={handleChange} />
       </label>
       <div>{status}</div>
+      
     </div>
   );
 }

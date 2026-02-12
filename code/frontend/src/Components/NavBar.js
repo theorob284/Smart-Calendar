@@ -10,8 +10,8 @@ const Navbar = () => {
       </div>
       <div className="navbar-center">
         <ul className="nav-links">
-          <li><a href="/">Import Calendars</a></li>
-          <li><a href="/">Create Event</a></li>
+          <li><a href="/upload">Import Calendars</a></li>
+          <li><a href="/">Blank</a></li>
           <li><a href="/">Blank</a></li>
         </ul>
       </div>

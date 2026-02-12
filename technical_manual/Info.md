@@ -22,3 +22,8 @@ react router: npm i react-router
 npm install react-router-dom
 
 Navbar guide: https://dev.to/udoka_emmanuel/how-to-build-a-navigation-bar-in-react-a-step-by-step-guide-2pcp
+
+pip install icalendar
+pip install pypdf
+python -m pip install pillow
+
