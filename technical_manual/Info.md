@@ -15,6 +15,8 @@ React button component: https://mui.com/material-ui/react-button/
 Sending file to django backend: https://joetatusko.com/2024/01/29/how-to-send-file-objects-from-a-react-frontend-to-django-backend/
 
 pip install icalendar
-pip install pypdf
+pip install pdfplumber
 python -m pip install pillow
+pip install python-dateutil
 
+https://docs.python.org/3/library/re.html re docs
