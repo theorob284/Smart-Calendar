@@ -9,6 +9,8 @@ export default function CheckExtractedEvent() {
     const [checkevent, setCheckEvent] = useState([]);
     const [accepting, setAccepting] = useState(false);
     const [counter, setCounter] = useState(0);
+    const [rejecting, setRejecting] = useState(false);
+    const [counterRej, setRejCounter] = useState(0);
     const [conflictbyid, setConflictById] = useState({});
     const {docID} = useParams();
     const [editId, setEditId] = useState(null);
@@ -107,6 +109,21 @@ export default function CheckExtractedEvent() {
       setAccepting(false);
     }
 
+    const RejectAll = async () => {
+      setRejecting(true);
+      setRejCounter(0);
+      
+      for (const cand of checkevent){
+
+        const id = cand.id
+        await AxiosInstance.post(`/api/candidates/${id}/reject/`)
+        setRejCounter(prev => prev + 1);
+        updateStatus(id);
+      }
+
+      setRejecting(false);
+    }
+
     const edit = async (id) => {
       await AxiosInstance.patch(`/api/candidates/${id}/`, {
         title: form.title,
@@ -153,6 +170,9 @@ export default function CheckExtractedEvent() {
         <div>
           <button onClick={AcceptAll} disabled = {accepting} >Accept all Events</button>
           {accepting && (<><p>Processing {counter} of {checkevent.length}</p></>)}
+
+          <button onClick={RejectAll} disabled = {rejecting} >Reject all Events</button>
+          {rejecting && (<><p>Processing {counterRej} of {checkevent.length}</p></>)}
         </div>
 
         <div style={{ marginTop: 12 }}>
