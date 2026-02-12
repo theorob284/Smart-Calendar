@@ -140,7 +140,7 @@ export default function CheckExtractedEvent() {
         await AxiosInstance.post(`/api/candidates/${item.candidate_id}/accept/`);
       }
 
-      await GetData()
+      await GetData();
       const eventRes = await AxiosInstance.get("/api/events/");
       setCreatedEvents(eventRes.data);
       setPlan(null);
@@ -153,17 +153,11 @@ export default function CheckExtractedEvent() {
         <div>
           <button onClick={AcceptAll} disabled = {accepting} >Accept all Events</button>
           {accepting && (<><p>Processing {counter} of {checkevent.length}</p></>)}
-
         </div>
 
         <div style={{ marginTop: 12 }}>
           <label>
-            <input
-              type="checkbox"
-              checked={useExisting}
-              onChange={(e) => setUseExisting(e.target.checked)}
-            />
-            Respect existing events
+            <input type="checkbox" checked={useExisting} onChange={(e) => setUseExisting(e.target.checked)}/>Respect existing events
           </label>
 
           <button onClick={generatePlan} disabled={planning}>
