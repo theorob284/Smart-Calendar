@@ -271,10 +271,12 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
     return candidates
 
 def extractOCR(image):
-
+    # Tesseract docs: https://tesseract-ocr.github.io/tessdoc/
     text_parts = []
     img = Image.open(image)
-    text = pytesseract.image_to_string(img)
+
+    img = img.resize((img.width * 2, img.height * 2), Image.Resampling.LANCZOS)
+    text = pytesseract.image_to_string(img, config="--psm 6")
     if text:
         text_parts.append(text)
         return "\n".join(text_parts)
