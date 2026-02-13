@@ -19,78 +19,92 @@ class FileUploadAPIView(generics.CreateAPIView):
     parser_classes = (MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
-        response = super().create(request, *args, **kwargs)
-        doc_id = response.data["id"]
-        doc = Document.objects.get(id=doc_id)
 
-        file_path = doc.file.path
-        ext = os.path.splitext(doc.file.name.lower())[1]
+        files = request.FILES.getlist("files")
+        if not files:
+            OneFile =  request.FILES.get("file")
+            if OneFile:
+                files = [OneFile]
+        
+        if not files:
+            return Response({"detail": "No files provided."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        FilesTitle = request.data.get("title") or f"Upload ({len(files)} files)"
+        FilesDoc = Document.objects.create(title=FilesTitle, file=files[0])
 
-        candidates = []
+        def parseFiles(file_path,name):
+            candidates = []
+            ext = os.path.splitext(name.lower())[1]
+            if ext == ".ics":
+                candidates = parse_ics(file_path)
 
-        if ext == ".ics":
-            candidates = parse_ics(file_path)
-
-        elif ext == ".pdf":
-            text = extractPDF(file_path)
-            # One candidate for now, later split
-            candidates = ExtractedTextToEvent(text)
-            if not candidates:
+            elif ext == ".pdf":
+                text = extractPDF(file_path)
+                # One candidate for now, later split
+                candidates = ExtractedTextToEvent(text)
+                if not candidates:
+                    candidates = [{
+                        "title": f"Imported from {name}",
+                        "start_time": None,
+                        "end_time": None,
+                        "location": "",
+                        "confidence": 0.2,
+                        "raw_text": text[:5000],  # avoid huge DB entry
+                    }]
+            elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
+                text = extractOCR(file_path)
+                candidates = ExtractedTextToEvent(text)
+                if not candidates:
+                    candidates = [{
+                        "title": f"OCR pending for image: {name}",
+                        "raw_text": "Image uploaded. OCR not implemented yet.",
+                        "confidence": 0.0,
+                        "start_time": None,
+                        "end_time": None,
+                        "location": "",
+                    }]
+            else:
                 candidates = [{
-                    "title": f"Imported from {doc.title}",
-                    "start_time": None,
-                    "end_time": None,
-                    "location": "",
-                    "confidence": 0.2,
-                    "raw_text": text[:5000],  # avoid huge DB entry
-                }]
-        elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
-            text = extractOCR(file_path)
-            candidates = ExtractedTextToEvent(text)
-            if not candidates:
-                candidates = [{
-                    "title": f"OCR pending for image: {doc.title}",
-                    "raw_text": "Image uploaded. OCR not implemented yet.",
+                    "title": "Unsupported file type (stored only)",
                     "confidence": 0.0,
+                    "raw_text": name,
                     "start_time": None,
                     "end_time": None,
                     "location": "",
                 }]
-        else:
-            candidates = [{
-                "title": "Unsupported file type (stored only)",
-                "confidence": 0.0,
-                "raw_text": doc.file.name,
-                "start_time": None,
-                "end_time": None,
-                "location": "",
-            }]
+            return candidates
 
         created = []
-        for c in candidates:
-            obj = ExtractedEventCandidate.objects.create(
-                document=doc,
-                title=c.get("title", ""),
-                start_time=c.get("start_time"),
-                end_time=c.get("end_time"),
-                location=c.get("location", ""),
-                raw_text=c.get("raw_text", ""),
-                confidence=c.get("confidence"),
-            )
-            created.append({
-                "id": obj.id,
-                "title": obj.title,
-                "start_time": obj.start_time,
-                "end_time": obj.end_time,
-                "location": obj.location,
-                "confidence": obj.confidence,
-            })
-
+        for f in files:
+            childDoc = Document.objects.create(title=f.name, file=f)
+            file_path = childDoc.file.path
+            candidates = parseFiles(file_path, childDoc.file.name)
+            for c in candidates:
+                obj = ExtractedEventCandidate.objects.create(
+                    document=FilesDoc,
+                    title=c.get("title", ""),
+                    start_time=c.get("start_time"),
+                    end_time=c.get("end_time"),
+                    location=c.get("location", ""),
+                    raw_text=c.get("raw_text", ""),
+                    confidence=c.get("confidence"),
+                )
+                created.append({
+                    "id": obj.id,
+                    "title": obj.title,
+                    "start_time": obj.start_time,
+                    "end_time": obj.end_time,
+                    "location": obj.location,
+                    "confidence": obj.confidence,
+                })
+        
+        docData = self.get_serializer(FilesDoc).data
         # Return normal upload response + candidates
         return Response(
             {
-                "document": response.data,
+                "document": docData,
                 "candidates_created": created,
+                "files_received": len(files),
             },
             status=status.HTTP_201_CREATED,
         )
