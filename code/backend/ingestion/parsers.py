@@ -131,65 +131,93 @@ def _FindLocation(sentence):
         return ""
 
     loc = re.sub(r"\s+", " ", loc).strip(" ,.-")
+    loc = loc.rstrip(" ?!.")
+    loc = re.sub(r"(?i)^(?:at|in|inside|near|by)\s+(?:the\s+)?", "", loc).strip()
+    loc = re.sub(r"(?ix)^\d{1,2}[:\.]\d{2}\s*(?:am|pm|a\.?m\.?|p\.?m\.?)?\s*", "", loc).strip()
     if re.fullmatch(r"(?ix)\d{1,2}[:\.]\d{2}\s*(?:am|pm|a\.?m\.?|p\.?m\.?)?", loc):
         return ""
     loc = re.split(r"(?ix)\s+\b(?:at|from|to|by|starting|start)\b\s+", loc, maxsplit=1)[0].strip(" ,.-")
     return loc
 
 def _GuessTitle(sentence, date, start, loc):
-
+    original_sentence = sentence
     sentence = re.sub(r"\s+", " ", sentence).strip()
-    sentence = re.sub(r"(?i)^\s*on\s*[,:\-–—]*\s*", "", sentence)
-    sentence = re.sub(r"(?i)^\s*on\s+the\s+", "", sentence)
-    IsTimeRange = re.search(timeRangeRegex, sentence, flags=re.I)
-    if IsTimeRange and IsTimeRange.start() <= 3:
-        after = sentence[IsTimeRange.end():].strip(" :-–—,")
+
+    def applySubs(rules):
+        nonlocal sentence
+        for patterns, replace in rules:
+            sentence = re.sub(patterns, replace, sentence, flags=re.I)
+        return sentence
+
+    def Getgroup(pattern):
+        find = re.search(pattern, sentence, flags=re.I)
+        return find.group(1) if find else None
+
+    applySubs([(r"^\s*[–\-•]+\s*", ""),(r"^\s*on\s*[,:\-–—]*\s*", ""),(r"^\s*on\s+the\s+", ""),])
+
+    timeRange = re.search(timeRangeRegex, sentence, flags=re.I)
+    if timeRange and timeRange.start() <= 3:
+        after = sentence[timeRange.end():].strip(" :-–—,")
         if after:
             sentence = after
-    else:
-        if start:
-            IsSingleTime = re.search(re.escape(start), sentence, flags=re.I)
-            if IsSingleTime and IsSingleTime.start() <= 3:
-                after = sentence[IsSingleTime.end():].strip(" :-–—,")
-                if after:
-                    sentence = after
-    
-    find = re.search(r"\bwith\s+(?:the|a|an)?\s*(.+?)(?=\s+\b(?:at|in|from|to|by|starting)\b|[.,;]|$)", sentence, flags=re.I)
-    if find:
-        sentence = find.group(1)
+    elif start:
+        starting = re.search(re.escape(start), sentence, flags=re.I)
+        if starting and starting.start() <= 3:
+            after = sentence[starting.end():].strip(" :-–—,")
+            if after:
+                sentence = after
 
-    find2 = re.search(r"\b(?:present|presenting|conducting|hosting|running)\s+(?:the\s+)?(.+?)(?=\s+\b(?:at|in|from|to|by|starting)\b|[.,;]|$)", sentence, flags=re.I)
-    if find2:
-        sentence = find2.group(1)
-    
-    sentence = re.split(r"(?i)\s+\b(?:at|in|from|to|by|starting)\b\s+", sentence, maxsplit=1)[0]
-    sentence = re.split(r"(?i)\s+\b(?:is|are|was|were)\s+(?:at|in)\b\s+", sentence, maxsplit=1)[0]
+    find = Getgroup(r"\bwith\s+(?:the|a|an)?\s*(.+?)(?=\s+\b(?:at|in|from|to|by|starting)\b|[.,;]|$)")
+    if find: 
+        sentence = find
+
+    find = Getgroup(r"\b(?:present|presenting|conducting|hosting|running)\s+(?:the\s+)?(.+?)(?=\s+\b(?:at|in|from|to|by|starting)\b|[.,;]|$)")
+    if find: 
+        sentence = find
+
+    sentence = re.split(r"(?i)\s+\b(?:at|in|from|to|by|starting)\b\s+", sentence, 1)[0]
+    sentence = re.split(r"(?i)\s+\b(?:is|are|was|were)\s+(?:at|in)\b\s+", sentence, 1)[0]
     sentence = re.sub(r"(?i)\s+\bon\b\s*$", "", sentence).strip()
 
     find = re.search(r"(?i)^\s*(?:the\s+)?(.+?)\s+\b(?:is|will)\s+(?:scheduled|occur|take\s+place|be\s+held|follow|begin|start)\b", sentence)
-    if find:
+    if find: 
         sentence = find.group(1).strip()
+
+    sentence = re.split(r"(?i)\s+(?:how|i['’]m|there['’]s|we['’]ll|we will)\b", sentence, 1)[0]
+    find = re.search(r"(?i)\b(?:local\s+)?(.+?\b(?:exhibition|game|dinner|meeting|assembly|workshop|run|night))\b", sentence)
+    if find: 
+        sentence = find.group(1)
+    sentence = re.sub(r"(?i)^\s*(?:there['’]s|there is)\s+(?:a\s+)?", "", sentence).strip()
 
     if date:
         sentence = sentence.replace(date, "")
     if loc:
         sentence = re.sub(re.escape(loc).replace(r"\ ", r"\s+"), "", sentence, flags=re.I)
-    sentence = re.sub(r"^\s*(?:here(?:'s| is)\s+an?\s+overview.*?:\s*)", "", sentence, flags=re.I)
-    sentence = re.sub(r"^\s*(?:good\s+(?:morning|afternoon|evening).*?:?\s*)", "", sentence, flags=re.I)
-    sentence = re.sub(r"^\s*(?:on\s+)?(?:mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday|sun|sunday)\b[:,\-]?\s*", "", sentence, flags=re.I)
-    sentence = re.sub(r"^\s*(?:later\s+that\s+same\s+day|later\s+on|additionally|finally|please\s+remember\s+that)\b[:,\-]?\s*", "", sentence, flags=re.I)
 
-    sentence = re.sub(r"^(?:on\s+)?(?:the\s+week\s+begins\s+with|we\s+will|the\s+team\s+will|it\s+will|is\s+scheduled|there\s+is|there\s+will\s+be|this\s+will\s+be)\s+", "", sentence, flags=re.I)
-    sentence = re.sub(r"\b(at|in|from|to|on)\s*$", "", sentence, flags=re.I)
-    sentence = re.sub(r"\b(?:will\s+(?:be\s+)?)?(?:occur|take\s+place|be\s+held|be\s+conducted|be\s+hosted|begin|begins|start|starts|scheduled|present|presents|marks)\b", "", sentence, flags=re.I)
-
+    applySubs([
+        (r"^\s*[–\-•]+\s*", ""),
+        (r"^\s*(?:here(?:'s| is)\s+an?\s+overview.*?:\s*)", ""),
+        (r"^\s*(?:good\s+(?:morning|afternoon|evening).*?:?\s*)", ""),
+        (r"^\s*(?:on\s+)?(?:mon|monday|tue|tuesday|wed|wednesday|thu|thursday|fri|friday|sat|saturday|sun|sunday)\b[:,\-]?\s*", ""),
+        (r"^\s*(?:later\s+that\s+same\s+day|later\s+on|additionally|finally|please\s+remember\s+that)\b[:,\-]?\s*", ""),
+        (r"^\s*on\s*[,:\-–—]*\s*", ""),
+        (r"^(?:on\s+)?(?:the\s+week\s+begins\s+with|we\s+will|the\s+team\s+will|it\s+will|is\s+scheduled|there\s+is|there\s+will\s+be|this\s+will\s+be)\s+", ""),
+        (r"\b(at|in|from|to|on)\s*$", ""),
+        (r"\b(?:will\s+(?:be\s+)?)?(?:occur|take\s+place|be\s+held|be\s+conducted|be\s+hosted|begin|begins|start|starts|scheduled|present|presents|marks)\b", ""),
+    ])
     sentence = re.sub(r"\s+", " ", sentence).strip(" ,.-")
     sentence = re.sub(r"^(?:the|a|an)\s+", "", sentence, flags=re.I)
     sentence = re.sub(r"(?i)\b(in|at)\s+(?:t|th)$", "", sentence).strip()
+    sentence = re.sub(r"^[\s\ufeff\u200b\u200c\u200d]*[–—−\-•]+\s*", "", sentence).strip()
 
-    find = re.search(r"\bwith\s+(?:the|a|an)?\s*(.+?)(?=\s+\b(?:at|in|from|to|by|starting)\b|[.,;]|$)", sentence, flags=re.I)
-    if find:
+    find = re.search(r"(?i)\b(art exhibition|exhibition|game night|game|workshop|meeting|assembly|training)\b", sentence)
+    if find and len(sentence) < 3:
         sentence = find.group(1)
+
+    if len(sentence.strip()) < 3:
+        find = re.search(r"(?i)\b(?:local\s+)?(.+?\b(?:exhibition|game night|game|dinner|meeting|assembly|workshop|run|training|fire drill))\b", original_sentence)
+        if find:
+            sentence = find.group(1).strip()
 
     return (sentence[:60] or "Imported event").strip()
 
