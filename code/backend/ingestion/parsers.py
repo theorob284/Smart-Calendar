@@ -92,10 +92,6 @@ def _SplitSenteces(text):
     splitted = re.split(r"(?<=[\.\!\?])\s+", text.strip())
     return [s.strip() for s in splitted if s.strip()]
 
-def _SplitLines(text):
-    lines = [ln.strip() for ln in text.splitlines()]
-    return [ln for ln in lines if ln]
-
 def _FindDate(sentence):
     for pattern in datePattern:
         find = re.search(pattern, sentence)
