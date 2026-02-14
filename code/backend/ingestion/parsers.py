@@ -43,7 +43,7 @@ def parse_ics(file_path):
 
     return results
 
-# PDF Extraction logic
+# PDF and OCR Extraction logic
 #------------------------------------------
 
 datePattern = [
