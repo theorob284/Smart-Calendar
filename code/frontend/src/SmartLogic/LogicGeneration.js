@@ -7,11 +7,28 @@ export function useSmartPlan({ docID, onApplied }) {
   const [useExisting, setUseExisting] = useState(true);
   const [allowReschedule, setAllowReschedule] = useState(false);
   const [maxTimeShift, setMaxTimeShift] = useState(60);
+  const [strictness, setStrictness] = useState(1)
 
   const generatePlan = async () => {
     setPlanning(true);
+    let conflictPenalty = 1.0;
+    let movePenalty = 0.05;
+    let skipPenalty = 0.5
+
+    if (strictness === 0){
+        conflictPenalty = 0.5;
+        movePenalty = 0.02;
+        skipPenalty = 3.0;
+    }
+
+    if (strictness === 2) {
+        conflictPenalty = 2.5;
+        movePenalty = 0.1;
+        skipPenalty = 1.0;
+    }
+
     try {
-      const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)],ExistingEvents: useExisting, AllowReschedule: allowReschedule, MaxTimeShift: maxTimeShift}); 
+      const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)],ExistingEvents: useExisting, AllowReschedule: allowReschedule, MaxTimeShift: maxTimeShift, ConflictPenalty: conflictPenalty, MovePenalty: movePenalty, SkipPenalty: skipPenalty}); 
       setPlan(res.data);
     } finally { setPlanning(false);}
   };
@@ -27,5 +44,5 @@ export function useSmartPlan({ docID, onApplied }) {
   };
   const clearPlan = () => setPlan(null);
 
-  return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan};
+  return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness};
 }

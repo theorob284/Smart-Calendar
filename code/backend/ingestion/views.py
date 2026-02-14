@@ -274,6 +274,8 @@ class SmartPlanView(APIView):
             
             BestOption = None
             BestScore = None
+            BestExistingOverlap = 0.0
+            BestSelectedOverlap = 0.0
             SkipScore = -(data["SkipPenalty"] * confidece)
 
             for OptionalStart, OptionalEnd, moved in options:
@@ -295,12 +297,15 @@ class SmartPlanView(APIView):
                 if BestScore is None or score > BestScore:
                     BestScore = score
                     BestOption = (OptionalStart, OptionalEnd, moved)
+                    BestExistingOverlap = ExistingOverlap
+                    BestSelectedOverlap = SelectedOverlap
             
             if BestScore is None or BestScore <= SkipScore:
                 skipped.append({
                     "candidate_id": cand.id,
                     "reason": "No option to schedule",
-                    "bestOptionScore": BestScore
+                    "bestOptionScore": BestScore,
+                    "skip_threshold": SkipScore,
                 })
                 continue
             
@@ -312,7 +317,11 @@ class SmartPlanView(APIView):
                 "start_time": ChosenStart,
                 "end_time": ChosenEnd,
                 "confidence": confidece,
-                "moved_minutes": moved
+                "moved_minutes": moved,
+                "explanation": {
+                    "existing_overlap_minutes": BestExistingOverlap,
+                    "selected_overlap_minutes": BestSelectedOverlap,
+                }
             })
             selected_ranges.append((ChosenStart, ChosenEnd))
         
