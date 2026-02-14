@@ -1,4 +1,6 @@
 import os
+
+from datetime import timedelta
 from django.utils import timezone
 from rest_framework import generics, status, viewsets
 from rest_framework.decorators import action
@@ -190,7 +192,7 @@ class SmartPlanView(APIView):
         )
 
         if data["ExistingEvents"]:
-            existing = Event.objects.all()
+            existing = list(Event.objects.all())
         else:
             existing = []
         
@@ -203,8 +205,23 @@ class SmartPlanView(APIView):
             else:
                 return 0.5
             
+        def getOverlappingMinutes (Astart, Aend, Bstart, Bend):
+            Latest = max(Astart, Bstart)
+            Earliest = min(Aend, Bend)
+            if Latest >= Earliest:
+                return 0.0
+            return (Earliest - Latest).total_seconds() / 60.0
+            
         candidates = list(CandidateSet)
-        candidates.sort(key=lambda c: (-candConfidence(c), c.start_time or timezone.now()))
+
+        def SortCandidates(Sortkey):
+            if Sortkey.start_time and Sortkey.end_time and Sortkey.end_time > Sortkey.start_time:
+                duration = (Sortkey.end_time - Sortkey.start_time).total_seconds()
+            else:
+                duration = -1
+            return (-duration, -candConfidence(Sortkey), Sortkey.start_time or timezone.now())
+
+        candidates.sort(key=SortCandidates)
         
         selected_ranges = []
 
@@ -220,37 +237,62 @@ class SmartPlanView(APIView):
             if cand.end_time <= cand.start_time:
                 skipped.append({"candidate_id": cand.id,"reason": "invalid_timerange"})
                 continue
-            
-            SelectedConflicts = False
-            for (start, end) in selected_ranges:
-                if cand.start_time < end and cand.end_time > start: #overlaps
-                    SelectedConflicts = True
-                    break
-            
-            if SelectedConflicts:
-                skipped.append({"candidate_id": cand.id, "reason": "Conflicts"})
-                continue
-            
-            ExistingConflicts = False
-            if data["ExistingEvents"]:
-                for ev in existing:
-                    if cand.start_time < ev.end_time and cand.end_time > ev.start_time: #overlaps
-                        ExistingConflicts = True
-                        break
-            
-            if ExistingConflicts:
-                skipped.append({"candidate_id": cand.id, "reason": "Conflicts"})
-                continue
 
+            confidece = candConfidence(cand)
+            duration = cand.end_time - cand.start_time
+
+            options = [(cand.start_time, cand.end_time, 0)]
+            if data["AllowReschedule"] and data["MaxTimeShift"] > 0:
+                for skipStep in [15, 30, 60, 90, 120, 180]:
+                    if skipStep <= data["MaxTimeShift"]:
+                        earlier = cand.start_time - timedelta(minutes=skipStep)
+                        later = cand.start_time + timedelta(minutes=skipStep)
+                        options.append((earlier, earlier + duration, skipStep))
+                        options.append((later, later + duration, skipStep))
+            
+            BestOption = None
+            BestScore = None
+            SkipScore = -(data["SkipPenalty"] * confidece)
+
+            for OptionalStart, OptionalEnd, moved in options:
+                ExistingOverlap = 0.0
+                for event in existing:
+                    ExistingOverlap += getOverlappingMinutes(OptionalStart, OptionalEnd, event.start_time, event.end_time)
+
+                SelectedOverlap = 0.0
+                for start, end in selected_ranges:
+                    SelectedOverlap += getOverlappingMinutes(OptionalStart, OptionalEnd, start, end)
+                    
+                Benefit = data["ConfidenceWeight"] * confidece
+                penalties = 0.0
+                penalties += data["MovePenalty"] * moved
+                penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
+
+                score = Benefit - penalties
+
+                if BestScore is None or score > BestScore:
+                    BestScore = score
+                    BestOption = (OptionalStart, OptionalEnd, moved)
+            
+            if BestScore is None or BestScore <= SkipScore:
+                skipped.append({
+                    "candidate_id": cand.id,
+                    "reason": "No option to schedule",
+                    "bestOptionScore": BestScore
+                })
+                continue
+            
+            ChosenStart, ChosenEnd, moved = BestOption
 
             selected.append({
                 "candidate_id": cand.id,
                 "title": cand.title,
-                "start_time": cand.start_time,
-                "end_time": cand.end_time,
-                "confidence": candConfidence(cand)
+                "start_time": ChosenStart,
+                "end_time": ChosenEnd,
+                "confidence": confidece,
+                "moved_minutes": moved
             })
-            selected_ranges.append((cand.start_time, cand.end_time))
+            selected_ranges.append((ChosenStart, ChosenEnd))
         
         plan = {
             "selected": selected,

@@ -18,3 +18,8 @@ class SmartPlanSerializer(serializers.Serializer):
     ExistingEvents = serializers.BooleanField(default=True)
     ConflictPenalty = serializers.FloatField(default=1.0)
     ConfidenceWeight = serializers.FloatField(default=1.0)
+    AllowReschedule = serializers.BooleanField(default=False)
+    MaxTimeShift = serializers.IntegerField(default=60)
+    SkipPenalty = serializers.FloatField(default=2.0)
+    MovePenalty = serializers.FloatField(default = 0.05)
+    ExistingConflictMulti = serializers.FloatField(default=3.0)
