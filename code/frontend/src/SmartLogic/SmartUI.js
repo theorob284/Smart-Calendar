@@ -28,6 +28,24 @@ export default function SmartPlanUI({ docID, onApplied }) {
           <p>Selected: {plan.stats?.selected_count ?? plan.selected?.length ?? 0}</p>
           <p>Skipped: {plan.stats?.skipped_count ?? plan.skipped?.length ?? 0}</p>
 
+          {plan.selected?.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+                <h4>Selected Events</h4>
+                {plan.selected.map((item) => (
+                <div key={item.candidate_id} style={{ marginBottom: 8 }}>
+                    <strong>{item.title}</strong>
+                    <div>
+                        {new Date(item.start_time).toLocaleString()} →{" "}
+                        {new Date(item.end_time).toLocaleString()}
+                    </div>
+                    <div>
+                        Moved: {item.moved_minutes} mins
+                    </div>
+                </div>
+                ))}
+            </div>
+            )}
+
           <button onClick={applyPlan}>Apply Smart Build</button>
           <button onClick={clearPlan} style={{ marginLeft: 8 }}>Clear</button>
         </div>

@@ -32,7 +32,7 @@ class FileUploadAPIView(generics.CreateAPIView):
             return Response({"detail": "No files provided."}, status=status.HTTP_400_BAD_REQUEST)
         
         FilesTitle = request.data.get("title") or f"Upload ({len(files)} files)"
-        FilesDoc = Document.objects.create(title=FilesTitle, file=files[0])
+        FilesDoc = Document.objects.create(title=FilesTitle)
 
         def parseFiles(file_path,name):
             candidates = []
@@ -99,6 +99,9 @@ class FileUploadAPIView(generics.CreateAPIView):
                     "location": obj.location,
                     "confidence": obj.confidence,
                 })
+        if childDoc.file:
+            childDoc.file.delete(save=True)
+        childDoc.delete()
         
         docData = self.get_serializer(FilesDoc).data
         # Return normal upload response + candidates
