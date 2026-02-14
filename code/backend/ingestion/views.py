@@ -156,6 +156,28 @@ class CandidateView(viewsets.ModelViewSet):
         if cand.status != ExtractedEventCandidate.Status.pending:
             return Response({"error": "only candidates in the pending state can be edited"}, status=409)
         
+        OverrideStart = request.data.get("start_time")
+        OverrideEnd = request.data.get("end_time")
+
+        if (OverrideStart and not OverrideEnd) or (not OverrideStart and OverrideEnd):
+            return Response({"error": "Start time and End time must be provided"}, status=400)
+
+        if OverrideStart and OverrideEnd:
+            ParsedStart = parse_datetime(OverrideStart)
+            ParsedEnd = parse_datetime(OverrideEnd)
+
+            if not ParsedStart or not ParsedEnd:
+                return Response({"error": "invalid date format"}, status=400)
+            
+            if ParsedEnd <= ParsedStart:
+                return Response({"error": "end time must be after start time"},status=400)
+
+            cand.start_time = ParsedStart
+            cand.end_time = ParsedEnd
+        
+        if not cand.start_time or not cand.end_time:
+            return Response({"error": "Missing start or end time"}, status=400)
+        
         ConvertToEvent = {
             "title": cand.title,
             "start_time": cand.start_time,
@@ -175,10 +197,7 @@ class CandidateView(viewsets.ModelViewSet):
         cand.approveEvent = event
         cand.save()
 
-        return Response({
-            "candidate": self.get_serializer(cand).data,
-            "event": serializer.data
-        }, status=201)
+        return Response({"candidate": self.get_serializer(cand).data,"event": serializer.data}, status=201)
     
 class SmartPlanView(APIView):
     def post(self, request):
