@@ -2,13 +2,23 @@ import React from "react";
 import { useSmartPlan } from "./LogicGeneration";
 
 export default function SmartPlanUI({ docID, onApplied }) {
-  const {plan, planning, useExisting, setUseExisting,generatePlan, applyPlan, clearPlan } = useSmartPlan({ docID, onApplied });
+  const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan } = useSmartPlan({ docID, onApplied });
 
   return (
     <div style={{ marginTop: 12 }}>
       <label> 
         <input type="checkbox" checked={useExisting} onChange={(e) => setUseExisting(e.target.checked)}/> Respect existing events
       </label>
+
+      <div style={{ marginTop: 8 }}>
+        <label>
+            <input type="checkbox" checked={allowReschedule} onChange={(e) => setAllowReschedule(e.target.checked)}/>{" "}Allow rescheduling extracted events
+        </label>
+
+        <span style={{ marginLeft: 10 }}> Max shift (mins):{" "}
+          <input type="number" min={0} max={1440} value={maxTimeShift} onChange={(e) => setMaxTimeShift(Number(e.target.value))} disabled={!allowReschedule} style={{ width: 90 }} />
+        </span>
+      </div>
 
       <button onClick={generatePlan} disabled={planning} style={{ marginLeft: 8 }}> {planning ? "Planning..." : "Generate Smart Plan"}</button>
 
