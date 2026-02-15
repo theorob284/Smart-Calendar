@@ -4,15 +4,18 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import multiMonthPlugin from '@fullcalendar/multimonth'
+import interactionPlugin from '@fullcalendar/interaction'
 
 
-const MyCalendar = ({myEvents}) => {
+const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
 
   return (
     <FullCalendar
-        plugins={[ dayGridPlugin, timeGridPlugin, listPlugin,multiMonthPlugin ]}
+        plugins={[ dayGridPlugin, timeGridPlugin, listPlugin, multiMonthPlugin, interactionPlugin ]}
         initialView="dayGridMonth"
         events={myEvents}
+        dateClick={onDateClick}
+        eventClick={onEventClick}
 
         views = {{
            multiMonth3:{
