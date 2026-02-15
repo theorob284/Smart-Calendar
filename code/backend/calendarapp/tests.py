@@ -35,7 +35,6 @@ class EventValidationTests(TestCase):
             "location": "Room A",
             "event_type": "Meeting",
             "confidence": None, 
-            "group": None,
         }
         serializer = EventSerializer(data=data)
         self.assertTrue(serializer.is_valid(), serializer.errors)

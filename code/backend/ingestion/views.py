@@ -242,10 +242,20 @@ class SmartPlanView(APIView):
             else:
                 duration = -1
             return (-duration, -candConfidence(Sortkey), Sortkey.start_time or timezone.now())
+        
+        def GroupKey(c):
+            title = (c.title or "").strip().lower()
+            if not c.start_time or not c.end_time:
+                return ("title only", title)
+            
+            day = c.start_time.date()
+            grouped = (c.start_time.hour * 60 + c.start_time.minute) // 30
+            return ("timed", title, day, grouped)
 
         candidates.sort(key=SortCandidates)
         
         selected_ranges = []
+        selectedGroups = set()
 
         for cand in candidates:
             if not cand.title:
@@ -358,6 +368,11 @@ class SmartPlanView(APIView):
             ]
             Alternatives = FilterAlternatives[:3] if NeedsAlternatives else []
 
+            Gkey = GroupKey(cand)
+            if Gkey in selectedGroups:
+                skipped.append({"candidate_id": cand.id, "reason": "Already in alternative group"})
+                continue
+
             selected.append({
                 "candidate_id": cand.id,
                 "title": cand.title,
@@ -373,6 +388,7 @@ class SmartPlanView(APIView):
                 "alternatives": Alternatives
             })
             selected_ranges.append((ChosenStart, ChosenEnd))
+            selectedGroups.add(Gkey)
         
         plan = {
             "selected": selected,

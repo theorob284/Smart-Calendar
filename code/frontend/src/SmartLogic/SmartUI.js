@@ -86,13 +86,17 @@ export default function SmartPlanUI({ docID, onApplied }) {
                     <div style={{ marginTop: 6, fontSize: 12 }}>
                         <div style={{ fontWeight: "bold" }}>Alternatives:</div>
 
-                        {item.alternatives.map((alt, idx) => (
-                        <div key={idx} type="button" onClick={() => ChooseAlternative(item.candidate_id, alt)} style={{ display: "block", marginTop: 2, padding: "4px 6px", cursor: "pointer" }}>
-                            {new Date(alt.start).toLocaleString()} →{" "}
-                            {new Date(alt.end).toLocaleString()}{" "}
-                            (moved {alt.moved} mins, score {Number(alt.score).toFixed(2)})
-                        </div>
-                        ))}
+                        {item.alternatives.map((alt, idx) => {
+                          const isChosen = new Date(item.start_time).getTime() === new Date(alt.start).getTime() && new Date(item.end_time).getTime() === new Date(alt.end).getTime();
+
+                          return (
+                            <button key={idx} type="button" onClick={() => ChooseAlternative(item.candidate_id, alt)} style={{display: "block", marginTop: 4, padding: "4px 6px",cursor: "pointer", backgroundColor: isChosen ? "#d4edda" : "#f8f9fa", border: isChosen ? "2px solid #28a745" : "1px solid #ccc", fontWeight: isChosen ? "bold" : "normal",}}>
+                              {new Date(alt.start).toLocaleString()} →{" "}
+                              {new Date(alt.end).toLocaleString()}{" "}
+                              (moved {alt.moved} mins, score {Number(alt.score).toFixed(2)})
+                            </button>
+                          );
+                        })}
                     </div>
                     )}
                 </div>
