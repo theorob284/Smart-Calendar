@@ -2,10 +2,14 @@ import React from "react";
 import { useSmartPlan } from "./LogicGeneration";
 
 export default function SmartPlanUI({ docID, onApplied }) {
-  const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness } = useSmartPlan({ docID, onApplied });
+  const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness,
+    workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours
+   } = useSmartPlan({ docID, onApplied });
 
   return (
-    <div style={{ marginTop: 12 }}>
+    <div style={{  marginTop: 10, padding: 8, border: "1px dashed #ccc" }}>
+       <b>Preferences</b>
+       <br></br>
       <label> 
         <input type="checkbox" checked={useExisting} onChange={(e) => setUseExisting(e.target.checked)}/> Respect existing events
       </label>
@@ -29,6 +33,25 @@ export default function SmartPlanUI({ docID, onApplied }) {
           {strictness === 2 && "Strict"}
         </span>
       </div>
+
+      <div>
+        <label>
+            <input type="checkbox" checked={useWorkHours} onChange={(e) => setUseWorkHours(e.target.checked)} />{" "} Use working hours
+        </label>
+
+        <div style={{ marginTop: 8 }}>
+            <label style={{ marginRight: 8 }}>Work hours:</label>
+            <input type="number" min={0} max={23} value={workStartHour} onChange={(e) => setWorkStartHour(Number(e.target.value))} style={{ width: 60 }} disabled={!useWorkHours} />
+            <span style={{ margin: "0 6px" }}>to</span>
+            <input type="number" min={1} max={24} value={workEndHour} onChange={(e) => setWorkEndHour(Number(e.target.value))} style={{ width: 60 }} disabled={!useWorkHours}/>
+        </div>
+
+        <div style={{ marginTop: 8 }}>
+            <label>
+            <input type="checkbox" checked={avoidWeekend} onChange={(e) => setAvoidWeekend(e.target.checked)} disabled={!useWorkHours} />{" "} Avoid weekends </label>
+        </div>
+      </div>
+            
 
       <button onClick={generatePlan} disabled={planning} style={{ marginLeft: 8 }}> {planning ? "Planning..." : "Generate Smart Plan"}</button>
 

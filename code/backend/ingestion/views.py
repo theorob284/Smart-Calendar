@@ -99,9 +99,9 @@ class FileUploadAPIView(generics.CreateAPIView):
                     "location": obj.location,
                     "confidence": obj.confidence,
                 })
-        if childDoc.file:
-            childDoc.file.delete(save=True)
-        childDoc.delete()
+            if childDoc.file:
+                childDoc.file.delete(save=True)
+            childDoc.delete()
         
         docData = self.get_serializer(FilesDoc).data
         # Return normal upload response + candidates
@@ -292,6 +292,15 @@ class SmartPlanView(APIView):
                 penalties += data["MovePenalty"] * moved
                 penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
 
+                if data["WorkHours"]:
+                    WorkStart = data["WorkStart"]
+                    WorkEnd = data["WorkEnd"]
+
+                    if OptionalStart.hour < WorkStart or OptionalEnd.hour >= WorkEnd:
+                        penalties += data["OutsideWorkPenalty"]
+                    if data["AvoidWeekends"] and OptionalStart.weekday() >= 5:
+                        penalties += data["WeekendPenalty"]
+
                 score = Benefit - penalties
 
                 if BestScore is None or score > BestScore:
@@ -321,6 +330,7 @@ class SmartPlanView(APIView):
                 "explanation": {
                     "existing_overlap_minutes": BestExistingOverlap,
                     "selected_overlap_minutes": BestSelectedOverlap,
+                    "score": BestScore,
                 }
             })
             selected_ranges.append((ChosenStart, ChosenEnd))
