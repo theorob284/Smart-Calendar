@@ -234,7 +234,6 @@ class SmartPlanView(APIView):
                 return 0.0
             return (Earliest - Latest).total_seconds() / 60.0
             
-        candidates = list(CandidateSet)
 
         def SortCandidates(Sortkey):
             if Sortkey.start_time and Sortkey.end_time and Sortkey.end_time > Sortkey.start_time:
@@ -251,7 +250,68 @@ class SmartPlanView(APIView):
             day = c.start_time.date()
             grouped = (c.start_time.hour * 60 + c.start_time.minute) // 30
             return ("timed", title, day, grouped)
+        
+        def MergeIntervals(intervals):
+            intervals = sorted(intervals, key=lambda x: x[0])
+            merged = []
+            for start, end in intervals:
+                if not merged or start > merged[-1][1]:
+                    merged.append([start,end])
+                else:
+                    merged[-1][1] = max(merged[-1][1], end)
+            return [(start, end) for start, end in merged]
 
+        def GetGapOptions(Target, Duration, Busy, GapStart, GapEnd, MaxGapOptions = 10):
+            GetGapStart = []
+            for start, end in Busy:
+                if end <= GapStart or start >= GapEnd:
+                    continue
+                GetGapStart.append((max(start, GapStart), min(end, GapEnd)))
+            busy = MergeIntervals(GetGapStart)
+
+            timeline = [(GapStart, GapStart)] + busy + [(GapEnd, GapEnd)]
+            candidates = []
+            DurationSeconds = Duration.total_seconds()
+
+            for i in range(len(timeline) - 1):
+                GapStart = timeline[i][1]
+                GapEnd = timeline[i + 1][0]
+
+                if GapEnd <= GapStart:
+                    continue
+
+                if (GapEnd - GapStart).total_seconds() < DurationSeconds:
+                    continue
+
+                start1 = GapStart
+                event1 = start1 + Duration
+
+                Start2 = GapEnd - Duration
+                event2 = GapEnd
+
+                Start3 = Target
+                if Start3 < GapStart:
+                    Start3 = GapStart
+                if (Start3 + Duration) > GapEnd:
+                    Start3 = GapEnd - Duration
+                event3 = Start3 + Duration
+
+                for start, end in {(start1, event1), (Start2, event2), (Start3, event3)}:
+                    moved = abs((start - Target).total_seconds()) / 60.0
+                    candidates.append((start, end, moved))
+            
+            best = {}
+            for start, end, moved in candidates:
+                key = (start, end)
+                if key not in best or moved < best[key]:
+                    best[key] = moved
+            
+            options = [(start, end, best[(start, end)]) for (start, end) in best.keys()]
+            options.sort(key=lambda x: x[2]) 
+            return options[:MaxGapOptions]
+
+
+        candidates = list(CandidateSet)
         candidates.sort(key=SortCandidates)
         
         selected_ranges = []
@@ -275,12 +335,17 @@ class SmartPlanView(APIView):
 
             options = [(cand.start_time, cand.end_time, 0)]
             if data["AllowReschedule"] and data["MaxTimeShift"] > 0:
-                for skipStep in [15, 30, 60, 90, 120, 180]:
-                    if skipStep <= data["MaxTimeShift"]:
-                        earlier = cand.start_time - timedelta(minutes=skipStep)
-                        later = cand.start_time + timedelta(minutes=skipStep)
-                        options.append((earlier, earlier + duration, skipStep))
-                        options.append((later, later + duration, skipStep))
+                StartWindow = cand.start_time - timedelta(minutes=data["MaxTimeShift"])
+                EndWindow = cand.start_time + timedelta(minutes=data["MaxTimeShift"])
+
+                BusyIntervals = []
+                if data["ExistingEvents"]:
+                    BusyIntervals.extend((event.start_time, event.end_time) for event in existing)
+                BusyIntervals.extend(selected_ranges)
+
+                GapOptions = GetGapOptions(Target=cand.start_time, Duration=duration, Busy=BusyIntervals, GapStart = StartWindow, GapEnd=EndWindow, MaxGapOptions=10)
+
+                options.extend(GapOptions)
             
             BestOption = None
             BestScore = None
@@ -288,15 +353,19 @@ class SmartPlanView(APIView):
             BestSelectedOverlap = 0.0
             SkipScore = -(data["SkipPenalty"] * confidece)
             ScoredOptions = []
+            BestBufferRule = 0.0
 
             for OptionalStart, OptionalEnd, moved in options:
-                ExistingOverlap = 0.0
+                ExistingOverlapMinutes = 0.0
                 for event in existing:
-                    ExistingOverlap += getOverlappingMinutes(OptionalStart, OptionalEnd, event.start_time, event.end_time)
+                    ExistingOverlapMinutes += getOverlappingMinutes(OptionalStart, OptionalEnd, event.start_time, event.end_time)
 
-                SelectedOverlap = 0.0
+                SelectedOverlapMinutes = 0.0
                 for start, end in selected_ranges:
-                    SelectedOverlap += getOverlappingMinutes(OptionalStart, OptionalEnd, start, end)
+                    SelectedOverlapMinutes += getOverlappingMinutes(OptionalStart, OptionalEnd, start, end)
+
+                ExistingOverlap = ExistingOverlapMinutes / 60.0
+                SelectedOverlap = SelectedOverlapMinutes / 60.0
                     
                 Benefit = data["ConfidenceWeight"] * confidece
                 penalties = 0.0
@@ -310,14 +379,14 @@ class SmartPlanView(APIView):
                     GapBefore = (start - OptionalEnd).total_seconds() / 60.0
                     GapAfter = (OptionalStart - end).total_seconds() / 60.0
 
-
                     if 0 < GapBefore < BufferMinutes:
-                        penalties += BufferPenalty
                         BufferRule += (BufferMinutes - GapBefore)
                     
                     if 0 < GapAfter < BufferMinutes:
-                        penalties += BufferPenalty
                         BufferRule += (BufferMinutes - GapAfter)
+    
+                if BufferRule > 0:
+                    penalties += BufferPenalty
 
                 if data["WorkHours"]:
                     WorkStart = data["WorkStart"]
@@ -335,6 +404,7 @@ class SmartPlanView(APIView):
                     BestOption = (OptionalStart, OptionalEnd, moved)
                     BestExistingOverlap = ExistingOverlap
                     BestSelectedOverlap = SelectedOverlap
+                    BestBufferRule = BufferRule
                 
                 ScoredOptions.append({
                     "start": OptionalStart,
@@ -355,11 +425,14 @@ class SmartPlanView(APIView):
                 continue
             
             ChosenStart, ChosenEnd, moved = BestOption
+
+            AlternativeRule = 2
+
+            AlternativesExist = any(opt["score"] >= BestScore - AlternativeRule and not (opt["start"] == ChosenStart and opt["end"] == ChosenEnd) for opt in ScoredOptions)
             NeedsAlternatives = (
-                moved > 0 or BestExistingOverlap > 0 or BestSelectedOverlap > 0 or BufferRule >= 5
+                moved > 0 or BestExistingOverlap > 0 or BestSelectedOverlap > 0 or BestBufferRule >= 5 or AlternativesExist
             )
 
-            AlternativeRule = 1.5 if NeedsAlternatives else 0.25
             TopScore = ScoredOptions[0]["score"]
             FilterAlternatives = [
                 option for option in ScoredOptions
