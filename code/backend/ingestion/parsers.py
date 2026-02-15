@@ -43,41 +43,39 @@ def parse_ics(file_path):
 
     return results
 
+# these date regex's have been found and inspired from: https://regexbox.com/regex-templates/date, https://www.freecodecamp.org/news/regex-for-date-formats-what-is-the-regular-expression-for-matching-dates/
+# https://regex101.com/r/rAmexa/1 and most USEFULLY: https://thelinuxcode.com/mastering-regular-expressions-for-matching-date-formats/
+
 # PDF and OCR Extraction logic
 #------------------------------------------
 
+monthRegex = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t)?(?:ember)? |Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
+weekdayRegex = r"(?:Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)"
+dayRegex = r"\d{1,2}(?:st|nd|rd|th)?"
+yearRegex = r"(?:\d{2}|\d{4})"
+
 datePattern = [
-    # these date regex's have been found and inspired from: https://regexbox.com/regex-templates/date, https://www.freecodecamp.org/news/regex-for-date-formats-what-is-the-regular-expression-for-matching-dates/
-    # https://regex101.com/r/rAmexa/1 and most USEFULLY: https://thelinuxcode.com/mastering-regular-expressions-for-matching-date-formats/
-    # e.g. March 3, 2026 / March 12th 2026 / March 5th, 2026
-    r"\b(?:Jan|January|Feb|February|Mar|March|Apr|April|May|Jun|June|Jul|July|Aug|August|Sep|Sept|September|Oct|October|Nov|November|Dec|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,)?\s+\d{2,4}\b",
-    # 4 March 2026 / 09 March 2026 / 4th March 2026
-    r"\b\d{1,2}(?:st|nd|rd|th)?\s+(?:Jan|January|Feb|February|Mar|March|Apr|April|May|Jun|June|Jul|July|Aug|August|Sep|Sept|September|Oct|October|Nov|November|Dec|December)(?:,)?\s+\d{2,4}\b",
-    # weekday prefix (Monday, March 3, 2026 / Tue 4 March 2026)
-    r"\b(?:Mon|Monday|Tue|Tuesday|Wed|Wednesday|Thu|Thursday|Fri|Friday|Sat|Saturday|Sun|Sunday),?\s+(?:\d{1,2}(?:st|nd|rd|th)?\s+)?(?:Jan|January|Feb|February|Mar|March|Apr|April|May|Jun|June|Jul|July|Aug|August|Sep|Sept|September|Oct|October|Nov|November|Dec|December)\s+\d{1,2}(?:st|nd|rd|th)?(?:,)?\s+\d{2,4}\b",
-    r"\b\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\b", # e.g. 03/03/2026 / 3/8/26 / 06-03-2026 (slash or dash)
-    r"\b\d{1,2}\.\d{1,2}\.\d{2,4}\b", # Dot format (e.g. 06.03.2026 / 6.3.26)
-    r"\b\d{4}[-/.]\d{1,2}[-/.]\d{1,2}\b", # ISO format (e.g. 2026-03-05)
-    r"\b\d{1,2}-(?:Jan|January|Feb|February|Mar|March|Apr|April|May|Jun|June|Jul|July|Aug|August|Sep|Sept|September|Oct|October|Nov|November|Dec|December)-\d{2,4}\b"
-]
-# Times like 9:00 AM or 10:30 PM https://stackoverflow.com/questions/33906033/regex-for-time-in-hhmm-am-pm-format
+    rf"\b{monthRegex}\s+{dayRegex},?\s+{yearRegex}\b", # e.g. March 3, 2026 / March 12th 2026 / March 5th, 2026
+    rf"\b{dayRegex}\s+{monthRegex},?\s+{yearRegex}\b", # 4 March 2026 / 09 March 2026 / 4th March 2026
+    rf"\b{weekdayRegex},?\s+(?:{monthRegex}\s+{dayRegex},?\s+{yearRegex}|{dayRegex}\s+{monthRegex},?\s+{yearRegex})\b", # weekday prefix (Monday, March 3, 2026 / Tue 4 March 2026)
+    rf"\b\d{{1,2}}[-/]\d{{1,2}}[-/]{yearRegex}\b", # e.g. 03/03/2026 / 3/8/26 / 06-03-2026 (slash or dash)
+    rf"\b\d{{1,2}}\.\d{{1,2}}\.{yearRegex}\b", # Dot format (e.g. 06.03.2026 / 6.3.26)
+    rf"\b\d{{4}}[-/.]\d{{1,2}}[-/.]\d{{1,2}}\b",# ISO format (e.g. 2026-03-05)
+    rf"\b\d{{1,2}}-{monthRegex}-{yearRegex}\b",# e.g. 4-Mar-2026 / 04-March-26
+] 
+
 timeRegex = r"\b\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)\b"
-
-# 24-hour times: 14:30, 09:00, optional seconds
 Hour24Regex = r"\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\:[0-5]\d)?\b"
-
-# Ranges like "from 1:30 PM to 4:00 PM" or "1:30 PM - 4:00 PM"
 timeRangeRegex = rf"(?:from\s+)?({timeRegex}|{Hour24Regex})\s*(?:to|-|–)\s*({timeRegex}|{Hour24Regex})"
 
 # Locations
-locationRegex = r"""(?ix)\b(?:location|venue|address)\s*:\s*(?P<labelled>.+?)(?= [\.,;\n]|$)|\b(?:in|at|inside)\s+(?:the\s+)?(?P<place>(?:[A-Z][\w&'\-\.]*\s*){1,8}|Room\s*\d+[A-Za-z]?(?:IT\s+)?Training\s+Lab)(?= [\.,;\n]|$)"""
-# Extra location patterns common in school docs
-locationExtraPatterns = [
-    r"(?ix)\b(?:in|at|inside)\s+(?:the\s+)?(?P<loc>.+?)(?=[\.,;]|$)",
-    r"(?ix)\b(?:in|at|inside)\s+(?:the\s+)?(?P<loc>.+?)(?=\s+\bat\s+\d{1,2}[:\.]\d{2}\b|[\.,;]|$)",
-    r"(?ix)\bto\s+(?:the\s+)?(?P<loc>Main\s+Office|Office|Front\s+Office)(?=\s+\bby\b|[\.,;]|$)",
-    r"(?ix)\bacross\s+(?:the\s+)?(?P<loc>entire\s+campus|campus)(?=[\.,;]|$)",
-]
+CommonLocations = ["Main Office","Office","Front Office","Training Lab","IT Training Lab","Hall","Library",]
+CommonLocationsRegex = r"(?:{})".format("|".join(sorted((re.escape(x) for x in CommonLocations), key=len, reverse=True)))
+CheckRoom = r"(?:Room\s*\d+[A-Za-z]?)"
+campusOutlierCheck = r"(?:entire\s+campus|campus)"
+locationLabelledRegex = rf"""\b(?:location|venue|address)\s*:\s*(?P<labelled>.+?)(?=[\.,;\n]|$)"""
+locationPrepositionRegex = rf"""\b(?:in|at|inside|to|across)\s+(?:the\s+)?(?P<place>{CommonLocationsRegex} | {CheckRoom} | {campusOutlierCheck} | (?:[A-Z][\w&'\-\.]*\s*){{1,8}}) (?=[\.,;\n]|$)"""
+locationRegex = re.compile(locationLabelledRegex + "|" + locationPrepositionRegex, re.I | re.VERBOSE)
 
 def extractPDF(path):
     text_parts = []
@@ -110,25 +108,20 @@ def _FindTimeRange(sentence):
     return None, None
 
 def _FindLocation(sentence):
-
     sentence = re.sub(r"\s+", " ", sentence).strip()
-    find = re.search(locationRegex, sentence, flags=re.I | re.VERBOSE)
+
+    find = locationRegex.search(sentence)
     loc = ""
     if find:
-        loc = (find.group(1) or find.group(2) or "").strip()
-    
-    if not loc:
-        for pattern in locationExtraPatterns:
-            loca = re.search(pattern, sentence, flags=re.I)
-            if loca:
-                loc = (loca.group("loc") if "loc" in loca.groupdict() else loca.group(1)).strip()
-                break
+        gd = find.groupdict()
+        loc = (gd.get("labelled") or gd.get("place") or "").strip()
+
     if not loc:
         return ""
 
     loc = re.sub(r"\s+", " ", loc).strip(" ,.-")
     loc = loc.rstrip(" ?!.")
-    loc = re.sub(r"(?i)^(?:at|in|inside|near|by)\s+(?:the\s+)?", "", loc).strip()
+    loc = re.sub(r"(?i)^(?:at|in|inside|near|by|to|across)\s+(?:the\s+)?", "", loc).strip()
     loc = re.sub(r"(?ix)^\d{1,2}[:\.]\d{2}\s*(?:am|pm|a\.?m\.?|p\.?m\.?)?\s*", "", loc).strip()
     if re.fullmatch(r"(?ix)\d{1,2}[:\.]\d{2}\s*(?:am|pm|a\.?m\.?|p\.?m\.?)?", loc):
         return ""
