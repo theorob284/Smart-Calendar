@@ -12,6 +12,8 @@ export function useSmartPlan({ docID, onApplied }) {
   const [workStartHour, setWorkStartHour] = useState(9);
   const [workEndHour, setWorkEndHour] = useState(17);
   const [avoidWeekend, setAvoidWeekend] = useState(true)
+  const [bufferMinutes, setBufferMinutes] = useState(10);
+  const [bufferPenalty, setBufferPenalty] = useState(3.0);
 
   const generatePlan = async () => {
     setPlanning(true)
@@ -39,8 +41,9 @@ export function useSmartPlan({ docID, onApplied }) {
 
     try {
       const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)],ExistingEvents: useExisting, AllowReschedule: allowReschedule, MaxTimeShift: maxTimeShift, ConflictPenalty: conflictPenalty, 
-            MovePenalty: movePenalty, SkipPenalty: skipPenalty, 
-            WorkStart: workStartHour, WorkEnd: workEndHour, AvoidWeekends: avoidWeekend, WorkHours: useWorkHours}); 
+            MovePenalty: movePenalty, SkipPenalty: skipPenalty, outsideWorkPenalty, weekendPenalty,
+            WorkStart: workStartHour, WorkEnd: workEndHour, AvoidWeekends: avoidWeekend, WorkHours: useWorkHours,
+            BufferMinutes: bufferMinutes, BufferPenalty: bufferPenalty,}); 
       setPlan(res.data);
     } finally { setPlanning(false);}
   };
@@ -57,5 +60,5 @@ export function useSmartPlan({ docID, onApplied }) {
   const clearPlan = () => setPlan(null);
 
   return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness, 
-        workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours};
+        workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, bufferPenalty, setBufferPenalty};
 }

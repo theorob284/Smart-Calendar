@@ -29,3 +29,5 @@ class SmartPlanSerializer(serializers.Serializer):
     OutsideWorkPenalty = serializers.FloatField(default=5.0)
     WeekendPenalty = serializers.FloatField(default=10.0)
     WorkHours = serializers.BooleanField(default=False)
+    BufferTime = serializers.IntegerField(default=10, min_value=10)
+    BufferPenalty = serializers.FloatField(default=3.0)

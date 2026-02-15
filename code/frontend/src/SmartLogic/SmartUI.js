@@ -3,7 +3,7 @@ import { useSmartPlan } from "./LogicGeneration";
 
 export default function SmartPlanUI({ docID, onApplied }) {
   const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness,
-    workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours
+    workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, bufferPenalty, setBufferPenalty,
    } = useSmartPlan({ docID, onApplied });
 
   return (
@@ -51,7 +51,14 @@ export default function SmartPlanUI({ docID, onApplied }) {
             <input type="checkbox" checked={avoidWeekend} onChange={(e) => setAvoidWeekend(e.target.checked)} disabled={!useWorkHours} />{" "} Avoid weekends </label>
         </div>
       </div>
-            
+       
+       <div style={{ marginTop: 12 }}>
+            <label style={{ marginRight: 8 }}>Event buffer (mins):</label>
+            <input type="number" min={0} max={120} value={bufferMinutes} onChange={(e) => setBufferMinutes(Number(e.target.value))} style={{ width: 60 }}/>
+            <span style={{ marginLeft: 12 }}>
+                <label style={{ marginRight: 8 }}>Buffer penalty:</label> <input type="number" step="0.5" min={0} value={bufferPenalty} onChange={(e) => setBufferPenalty(Number(e.target.value))}style={{ width: 70 }} />
+            </span>
+      </div>
 
       <button onClick={generatePlan} disabled={planning} style={{ marginLeft: 8 }}> {planning ? "Planning..." : "Generate Smart Plan"}</button>
 
@@ -77,6 +84,20 @@ export default function SmartPlanUI({ docID, onApplied }) {
                         Overlap(selected): {item.explanation?.selected_overlap_minutes ?? 0} mins{" | "}
                         Score: {item.explanation?.score?.toFixed(2)}
                     </div>
+                
+                    {item.alternatives?.length > 0 && (
+                    <div style={{ marginTop: 6, fontSize: 12 }}>
+                        <div style={{ fontWeight: "bold" }}>Alternatives:</div>
+
+                        {item.alternatives.map((alt, idx) => (
+                        <div key={idx} style={{ marginTop: 2 }}>
+                            {new Date(alt.start).toLocaleString()} →{" "}
+                            {new Date(alt.end).toLocaleString()}{" "}
+                            (moved {alt.moved} mins, score {Number(alt.score).toFixed(2)})
+                        </div>
+                        ))}
+                    </div>
+                    )}
                 </div>
                 ))}
             </div>

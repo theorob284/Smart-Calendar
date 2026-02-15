@@ -277,6 +277,7 @@ class SmartPlanView(APIView):
             BestExistingOverlap = 0.0
             BestSelectedOverlap = 0.0
             SkipScore = -(data["SkipPenalty"] * confidece)
+            ScoredOptions = []
 
             for OptionalStart, OptionalEnd, moved in options:
                 ExistingOverlap = 0.0
@@ -291,6 +292,22 @@ class SmartPlanView(APIView):
                 penalties = 0.0
                 penalties += data["MovePenalty"] * moved
                 penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
+                BufferMinutes = data["BufferTime"]
+                BufferPenalty = data["BufferPenalty"]
+                BufferRule = 0.0
+
+                for start, end in selected_ranges:
+                    GapBefore = (start - OptionalEnd).total_seconds() / 60.0
+                    GapAfter = (OptionalStart - end).total_seconds() / 60.0
+
+
+                    if 0 < GapBefore < BufferMinutes:
+                        penalties += BufferPenalty
+                        BufferRule += (BufferMinutes - GapBefore)
+                    
+                    if 0 < GapAfter < BufferMinutes:
+                        penalties += BufferPenalty
+                        BufferRule += (BufferMinutes - GapAfter)
 
                 if data["WorkHours"]:
                     WorkStart = data["WorkStart"]
@@ -308,6 +325,15 @@ class SmartPlanView(APIView):
                     BestOption = (OptionalStart, OptionalEnd, moved)
                     BestExistingOverlap = ExistingOverlap
                     BestSelectedOverlap = SelectedOverlap
+                
+                ScoredOptions.append({
+                    "start": OptionalStart,
+                    "end": OptionalEnd,
+                    "moved": moved,
+                    "score": score,
+                })
+
+            ScoredOptions.sort(key=lambda x: x["score"], reverse=True)
             
             if BestScore is None or BestScore <= SkipScore:
                 skipped.append({
@@ -319,6 +345,18 @@ class SmartPlanView(APIView):
                 continue
             
             ChosenStart, ChosenEnd, moved = BestOption
+            NeedsAlternatives = (
+                moved > 0 or BestExistingOverlap > 0 or BestSelectedOverlap > 0 or BufferRule >= 5
+            )
+
+            AlternativeRule = 0.25
+            TopScore = ScoredOptions[0]["score"]
+            FilterAlternatives = [
+                option for option in ScoredOptions
+                if option["score"] >= TopScore - AlternativeRule
+                and not (option["start"] == ChosenStart and option["end"] == ChosenEnd)
+            ]
+            Alternatives = FilterAlternatives[:3] if NeedsAlternatives else []
 
             selected.append({
                 "candidate_id": cand.id,
@@ -331,7 +369,8 @@ class SmartPlanView(APIView):
                     "existing_overlap_minutes": BestExistingOverlap,
                     "selected_overlap_minutes": BestSelectedOverlap,
                     "score": BestScore,
-                }
+                },
+                "alternatives": Alternatives
             })
             selected_ranges.append((ChosenStart, ChosenEnd))
         
