@@ -3,7 +3,7 @@ import { useSmartPlan } from "./LogicGeneration";
 
 export default function SmartPlanUI({ docID, onApplied }) {
   const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness,
-    workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, bufferPenalty, setBufferPenalty,
+    workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, ChooseAlternative
    } = useSmartPlan({ docID, onApplied });
 
   return (
@@ -21,16 +21,6 @@ export default function SmartPlanUI({ docID, onApplied }) {
         
         <span style={{ marginLeft: 10 }}> Max shift (mins):{" "}
           <input type="number" min={0} max={1440} value={maxTimeShift} onChange={(e) => setMaxTimeShift(Number(e.target.value))} disabled={!allowReschedule} style={{ width: 90 }} />
-        </span>
-      </div>
-
-      <div style={{ marginTop: 12 }}>
-        <label>Strictness:</label>
-        <input type="range" min="0" max="2" step="1" value={strictness} onChange={(e) => setStrictness(Number(e.target.value))} style={{ marginLeft: 10 }}/>
-        <span style={{ marginLeft: 10 }}>
-          {strictness === 0 && "Aggressive"}
-          {strictness === 1 && "Balanced"}
-          {strictness === 2 && "Strict"}
         </span>
       </div>
 
@@ -55,9 +45,16 @@ export default function SmartPlanUI({ docID, onApplied }) {
        <div style={{ marginTop: 12 }}>
             <label style={{ marginRight: 8 }}>Event buffer (mins):</label>
             <input type="number" min={0} max={120} value={bufferMinutes} onChange={(e) => setBufferMinutes(Number(e.target.value))} style={{ width: 60 }}/>
-            <span style={{ marginLeft: 12 }}>
-                <label style={{ marginRight: 8 }}>Buffer penalty:</label> <input type="number" step="0.5" min={0} value={bufferPenalty} onChange={(e) => setBufferPenalty(Number(e.target.value))}style={{ width: 70 }} />
-            </span>
+      </div>
+
+      <div style={{ marginTop: 12 }}>
+        <label>Strictness:</label>
+        <input type="range" min="0" max="2" step="1" value={strictness} onChange={(e) => setStrictness(Number(e.target.value))} style={{ marginLeft: 10 }}/>
+        <span style={{ marginLeft: 10 }}>
+          {strictness === 0 && "Aggressive"}
+          {strictness === 1 && "Balanced"}
+          {strictness === 2 && "Strict"}
+        </span>
       </div>
 
       <button onClick={generatePlan} disabled={planning} style={{ marginLeft: 8 }}> {planning ? "Planning..." : "Generate Smart Plan"}</button>
@@ -90,7 +87,7 @@ export default function SmartPlanUI({ docID, onApplied }) {
                         <div style={{ fontWeight: "bold" }}>Alternatives:</div>
 
                         {item.alternatives.map((alt, idx) => (
-                        <div key={idx} style={{ marginTop: 2 }}>
+                        <div key={idx} type="button" onClick={() => ChooseAlternative(item.candidate_id, alt)} style={{ display: "block", marginTop: 2, padding: "4px 6px", cursor: "pointer" }}>
                             {new Date(alt.start).toLocaleString()} →{" "}
                             {new Date(alt.end).toLocaleString()}{" "}
                             (moved {alt.moved} mins, score {Number(alt.score).toFixed(2)})
@@ -102,7 +99,7 @@ export default function SmartPlanUI({ docID, onApplied }) {
                 ))}
             </div>
             )}
-
+          <br></br>
           <button onClick={applyPlan}>Apply Smart Build</button>
           <button onClick={clearPlan} style={{ marginLeft: 8 }}>Clear</button>
         </div>

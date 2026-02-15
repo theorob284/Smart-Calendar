@@ -349,7 +349,7 @@ class SmartPlanView(APIView):
                 moved > 0 or BestExistingOverlap > 0 or BestSelectedOverlap > 0 or BufferRule >= 5
             )
 
-            AlternativeRule = 0.25
+            AlternativeRule = 1.5 if NeedsAlternatives else 0.25
             TopScore = ScoredOptions[0]["score"]
             FilterAlternatives = [
                 option for option in ScoredOptions

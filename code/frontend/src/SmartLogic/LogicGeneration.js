@@ -13,7 +13,19 @@ export function useSmartPlan({ docID, onApplied }) {
   const [workEndHour, setWorkEndHour] = useState(17);
   const [avoidWeekend, setAvoidWeekend] = useState(true)
   const [bufferMinutes, setBufferMinutes] = useState(10);
-  const [bufferPenalty, setBufferPenalty] = useState(3.0);
+
+  const ChooseAlternative = (candidate_id, alternative) => {
+    setPlan((prev) => {
+      if (!prev) return prev;
+
+      const selected = (prev.selected || []).map(item => {
+        if (item.candidate_id !== candidate_id) return item
+        return {...item, start_time: alternative.start, end_time: alternative.end, moved_minutes: alternative.moved}
+      })
+
+      return {...prev, selected}
+    })
+  }
 
   const generatePlan = async () => {
     setPlanning(true)
@@ -22,6 +34,8 @@ export function useSmartPlan({ docID, onApplied }) {
     let skipPenalty = 2.0;
     let outsideWorkPenalty = 5.0;
     let weekendPenalty = 10.0;
+    let BufferPenalty = 3.0
+
 
     if (strictness === 0){
         conflictPenalty = 0.5;
@@ -29,6 +43,7 @@ export function useSmartPlan({ docID, onApplied }) {
         skipPenalty = 3.0;
         outsideWorkPenalty = 1.0;
         weekendPenalty = 2.0;
+        BufferPenalty = 1.0
     }
 
     if (strictness === 2) {
@@ -37,13 +52,14 @@ export function useSmartPlan({ docID, onApplied }) {
         skipPenalty = 1.0;
         outsideWorkPenalty = 15.0;
         weekendPenalty = 25.0;
+        BufferPenalty = 5.0
     }
 
     try {
       const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)],ExistingEvents: useExisting, AllowReschedule: allowReschedule, MaxTimeShift: maxTimeShift, ConflictPenalty: conflictPenalty, 
             MovePenalty: movePenalty, SkipPenalty: skipPenalty, outsideWorkPenalty, weekendPenalty,
             WorkStart: workStartHour, WorkEnd: workEndHour, AvoidWeekends: avoidWeekend, WorkHours: useWorkHours,
-            BufferMinutes: bufferMinutes, BufferPenalty: bufferPenalty,}); 
+            BufferMinutes: bufferMinutes, BufferPenalty: BufferPenalty}); 
       setPlan(res.data);
     } finally { setPlanning(false);}
   };
@@ -60,5 +76,5 @@ export function useSmartPlan({ docID, onApplied }) {
   const clearPlan = () => setPlan(null);
 
   return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness, 
-        workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, bufferPenalty, setBufferPenalty};
+        workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, ChooseAlternative};
 }
