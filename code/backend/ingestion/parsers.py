@@ -270,3 +270,4 @@ def extractOCR(image):
         text_parts.append(text)
         return "\n".join(text_parts)
     return ""
+
