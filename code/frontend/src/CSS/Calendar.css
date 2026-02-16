@@ -126,3 +126,16 @@
 .fc .fc-timegrid-slot-label {
   border-color: #f3f4f6;
 }
+
+.fc .fc-header-toolbar {
+  padding: 10px 12px;
+  margin-bottom: 12px;              
+  border-bottom: 1px solid #e2e5e9; 
+  background: #ffffff;
+
+}
+
+.fc .fc-button-primary.fc-button-active {
+  background-color: #174ea6 !important;
+  border-color: #174ea6 !important;
+}
