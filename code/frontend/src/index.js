@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client';
 import './CSS/index.css';
 import reportWebVitals from './reportWebVitals';
 import App from './App';
-import { BrowserRouter } from 'react-router';
+import { BrowserRouter } from 'react-router-dom';
 import Navbar from './Components/NavBar';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
