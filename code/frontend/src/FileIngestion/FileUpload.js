@@ -2,65 +2,99 @@
 import React, { useState } from 'react'
 import { uploadFile } from './ApiUpload'
 import { useNavigate } from 'react-router-dom'
+import "../CSS/Upload.css"
 
 export default function Upload({onUploaded}) {
-    const [multipleFiles, setMultipleFiles] = useState([])
-    const [status, setStatus] = useState("")
-    const navigate = useNavigate()
+    const [multipleFiles, setMultipleFiles] = useState([]);
+  const [status, setStatus] = useState("");
+  const [dragActive, setDragActive] = useState(false);
+  const navigate = useNavigate();
 
+  const addFiles = (files) => {
+    if (!files.length) return;
 
-    const handleChange = (e) => {
-      const files = Array.from(e.target.files || []);
-      if (!files.length) return;
-
-      setMultipleFiles((prev) => {
-        const map = new Map();
-        [...prev, ...files].forEach((f) => {
-          const key = `${f.name}_${f.size}_${f.lastModified}`;
-          map.set(key, f);
-        });
-        return Array.from(map.values());
+    setMultipleFiles((prev) => {
+      const map = new Map();
+      [...prev, ...files].forEach((f) => {
+        const key = `${f.name}_${f.size}_${f.lastModified}`;
+        map.set(key, f);
       });
-      setStatus((prevStatus) => "Files selected");
-    };
-      
-    const handleUpload = async () => {
-      if (!multipleFiles.length) return;
+      return Array.from(map.values());
+    });
 
-      try {
-        setStatus(`Uploading ${multipleFiles.length} file(s)..`)
-        const data = await uploadFile(multipleFiles);
-        setStatus(`Uploaded (${multipleFiles.length}) file(s)`);
-        if (onUploaded) onUploaded();
-        const docId = data.document?.id;
-        if (docId) navigate(`/review/${docId}`);
-         
-      } catch (e) {
-        console.error(e);
-        setStatus("upload failed");
-      }
+    setStatus("Files selected");
+  };
+
+  const handleChange = (e) => {
+    const files = Array.from(e.target.files || []);
+    addFiles(files);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragActive(true);
+  };
+
+  const handleDragLeave = () => {
+    setDragActive(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragActive(false);
+
+    const files = Array.from(e.dataTransfer.files || []);
+    addFiles(files);
+  };
+
+  const handleUpload = async () => {
+    if (!multipleFiles.length) return;
+
+    try {
+      setStatus(`Uploading ${multipleFiles.length} file(s)...`);
+      const data = await uploadFile(multipleFiles);
+      setStatus(`Uploaded (${multipleFiles.length}) file(s)`);
+
+      if (onUploaded) onUploaded();
+
+      const docId = data.document?.id;
+      if (docId) navigate(`/review/${docId}`);
+    } catch (e) {
+      console.error(e);
+      setStatus("Upload failed");
     }
+  };
 
-    return (
-    <div style={{ padding: 12 }}>
-      <label>
-        <span>Import files: </span>
-        <input type="file" multiple accept=".pdf,image/*,.ics" onChange={handleChange} />
-      </label>
+  return (
+    <div className="uploadPage">
+      <div className="uploadCard">
+        <h2>Import Calendar Files</h2>
 
-      <div style={{marginTop: 10}}>
-        <button onClick={handleUpload} disabled={!multipleFiles.length}> Upload</button>
+        <div className={`uploadBox ${dragActive ? "dragActive" : ""}`} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+          <label className="fileButton">Choose Files
+            <input type="file" multiple accept=".pdf,image/*,.ics" onChange={handleChange} />
+          </label>
+          <p className="uploadHint"> Or drag and drop files here (.ics, PDF, images) </p>
+        </div>
+
+        <button className="uploadPrimary" onClick={handleUpload} disabled={!multipleFiles.length} > Upload</button>
+
+        {status && <p className="uploadStatus">{status}</p>}
+
+        {multipleFiles.length > 0 && (
+          <ul className="fileList">
+            {multipleFiles.map((f) => {
+              const key = `${f.name}_${f.size}_${f.lastModified}`;
+              return (
+                <li key={key}>
+                  {f.name}
+                  <button type="button" onClick={() => setMultipleFiles((prev) => prev.filter((x) =>`${x.name}_${x.size}_${x.lastModified}` !== key))}>remove</button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
-      <div style={{marginTop:8}}>{status}</div>
-      
-      {multipleFiles.length > 0 && (
-      <ul style={{ marginTop: 10 }}>
-        {multipleFiles.map((f) => {
-          const key = `${f.name}_${f.size}_${f.lastModified}`;
-          return (<li key={key}>{f.name}{" "}<button type="button" onClick={() => setMultipleFiles((prev) =>prev.filter((x) =>`${x.name}_${x.size}_${x.lastModified}` !== key))}>remove</button></li>);
-        })}
-      </ul>
-    )}
     </div>
   );
 }
