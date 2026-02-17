@@ -21,6 +21,7 @@ const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
         displayEventTime={false}
         slotLabelInterval={{ hours: 2 }}
         dayHeaderFormat={{ weekday: "short", day: "2-digit", month: "2-digit" }}
+        
         views = {{
            multiMonth3:{
               type: 'multiMonth', 

@@ -53,7 +53,7 @@ export default function SmartPlanUI({ docID, onApplied }) {
       <span className="smartSub">Strictness:</span>
       <input className="smartRange" type="range" min="0" max="2" step="1" value={strictness} onChange={(e) => setStrictness(Number(e.target.value))}/>
       <span className="smartSub">
-        {strictness === 0 && "Aggressive"}
+        {strictness === 0 && "Light"}
         {strictness === 1 && "Balanced"}
         {strictness === 2 && "Strict"}
       </span>
