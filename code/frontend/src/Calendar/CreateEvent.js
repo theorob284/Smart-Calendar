@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import "../CSS/EventModal.css"
+import Modal from "../Components/Modal";
 
 const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
 
@@ -33,52 +34,46 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
   const handleSubmit = () => {onSave(formData);};
 
   return (
-    <div className="modalOverlay" onMouseDown={onClose}>
-      <div className="modalCard" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="modalHeader">
-          <h3>{selectedEvent?.id ? "Edit Event" : "Create Event"}</h3>
-        </div>
-
-        <div className="modalBody">
-          <label className="field"><span>Title</span>
-            <input name="title" placeholder="e.g. Team meeting" value={formData.title} onChange={handleChange}/>
-          </label>
+    <Modal open={isOpen} title={selectedEvent?.id ? "Edit Event" : "Create Event"} onClose={onClose}>
+      <div>
+        <label className="field">
+          <span>Title</span>
+          <input name="title" value={formData.title} onChange={handleChange}/>
+        </label>
 
         <div className="grid2">
           <label className="field">
             <span>Start</span>
-            <input type="datetime-local" name="start_time" value={formData.start_time} onChange={handleChange} /> 
+            <input type="datetime-local" name="start_time" value={formData.start_time} onChange={handleChange}/>
           </label>
 
           <label className="field">
             <span>End</span>
-            <input type="datetime-local" name="end_time" value={formData.end_time} onChange={handleChange} />
+            <input type="datetime-local" name="end_time" value={formData.end_time} onChange={handleChange}/>
           </label>
         </div>
 
         <div className="grid2">
           <label className="field">
             <span>Location</span>
-            <input name="location" placeholder="Optional" value={formData.location} onChange={handleChange} />
+            <input name="location" value={formData.location} onChange={handleChange}/>
           </label>
 
           <label className="field">
             <span>Type</span>
-            <input name="event_type" placeholder="Optional" value={formData.event_type} onChange={handleChange} />
+            <input name="event_type" value={formData.event_type} onChange={handleChange}/>
           </label>
         </div>
+
+        <div className="modalFooter">
+          <button className="btnPrimary" onClick={handleSubmit}> Save</button>
+
+          {selectedEvent?.id && ( <button className="btnDanger" onClick={onDelete}> Delete</button>)}
+
+          <button className="btnGhost" onClick={onClose}> Cancel</button>
+        </div>
       </div>
-
-      <div className="modalFooter">
-        <button className="btnPrimary" onClick={handleSubmit}> Save</button>
-
-        {selectedEvent?.id && (<button className="btnDanger" onClick={onDelete}>Delete</button> )}
-
-        <button className="btnGhost" onClick={onClose}>Cancel</button>
-      </div>
-    </div>
-  </div>
-  )
-};
-
+    </Modal>
+  );
+}
 export default EventModal;

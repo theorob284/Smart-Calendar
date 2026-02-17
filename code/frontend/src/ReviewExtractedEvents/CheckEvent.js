@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import AxiosInstance from "../Calendar/AxiosInstance";
 import { useParams, useNavigate } from "react-router-dom";
 import SmartPlanPanel from "../SmartLogic/SmartUI";
+import Modal from "../Components/Modal";
+import "../CSS/Modal.css"
 
 export default function CheckExtractedEvent() {
   const navigate = useNavigate();
@@ -25,6 +27,7 @@ export default function CheckExtractedEvent() {
     location: "",
     description: "",
   });
+  const [openModal, setOpenModal] = useState(false);
 
   const GetData = useCallback(() => {AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => {setCheckEvent(res.data);});}, [docID]);
 
@@ -147,7 +150,11 @@ export default function CheckExtractedEvent() {
         {rejecting && (<p>Processing {counterRej} of {checkevent.length}</p>)}
       </div>
 
-      <SmartPlanPanel docID={docID}onApplied={handleSmartApplied}/>
+      <button className="uploadPrimary" onClick={() => setOpenModal(true)}>Smart Plan</button>
+
+      <Modal open={openModal} title="Smart Plan Preferences"onClose={() => setOpenModal(false)} >
+        <SmartPlanPanel docID={docID} onApplied={async () => { await handleSmartApplied(); setOpenModal(false);}}/>
+      </Modal>
 
       {checkevent.map((c) => (
         <div key={c.id} style={{ marginTop: 16 }}>
