@@ -1,0 +1,113 @@
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modalCard {
+  width: min(520px, calc(100vw - 32px));
+  background: #fff;
+  border-radius: 14px;
+  border: 1px solid #e2e5e9;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.modalHeader {
+  padding: 16px 18px 10px;
+}
+
+.modalHeader h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.modalBody {
+  padding: 0 18px 14px;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.field span {
+  font-size: 12px;
+  font-weight: 500;
+  color: #6b7280;
+}
+
+.field input {
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid #e2e5e9;
+  padding: 0 12px;
+  font-size: 13px;
+  outline: none;
+  background: #fff;
+  color: #111827;
+}
+
+.field input:focus {
+  border-color: #1a73e8;
+  box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.14);
+}
+
+.grid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.modalFooter {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  padding: 14px 18px 18px;
+  border-top: 1px solid #eef0f2;
+}
+
+.btnPrimary, .btnGhost, .btnDanger {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+}
+
+.btnPrimary {
+  background: #1a73e8;
+  color: #fff;
+}
+.btnPrimary:hover {
+  background: #174ea6;
+}
+
+
+.btnGhost {
+  background: #fff;
+  border-color: #e2e5e9;
+  color: #374151;
+}
+.btnGhost:hover {
+  background: #f7f8fa;
+}
+
+.btnDanger {
+  background: #fff;
+  border-color: #fecaca;
+  color: #b91c1c;
+}
+.btnDanger:hover {
+  background: #fef2f2;
+}
