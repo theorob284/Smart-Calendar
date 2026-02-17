@@ -2,12 +2,6 @@ from django.db import models
 
 # Create your models here.
 
-class AlternativeGroup(models.Model):
-    description = models.CharField(max_length = 300, blank = True)
-
-    def __str__(self):
-        return f"Group {self.id}"
-
 class Event(models.Model):
     title = models.CharField(max_length=30)
     start_time = models.DateTimeField()
@@ -15,14 +9,6 @@ class Event(models.Model):
     location = models.CharField(max_length=100, blank = True)
     event_type = models.CharField(max_length=30, blank = True)
     confidence = models.DecimalField(max_digits=3, decimal_places=2, null= True, blank=True)
-
-    group = models.ForeignKey(
-        AlternativeGroup,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name="events",
-    )
 
     def __str__(self):
         return f"{self.title} ({self.start_time} - {self.end_time})"

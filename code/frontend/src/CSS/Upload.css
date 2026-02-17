@@ -1,0 +1,77 @@
+.uploadPage {
+  min-height: calc(100vh - 72px);
+  display: grid;
+  place-items: center;
+  padding: 40px 20px;
+}
+
+.uploadCard {
+  width: min(520px, 100%);
+  background: #fff;
+  border: 1px solid #e2e5e9;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.08);
+  text-align: center;
+}
+
+.uploadCard h2 {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #202124;
+}
+
+.uploadBox {
+  border: 2px dashed #d2e3fc;
+  border-radius: 12px;
+  padding: 30px;
+  margin-bottom: 20px;
+  background: #f8fbff;
+  transition: .2s ease;
+}
+.uploadBox.dragActive {
+  border-color: #1a73e8;
+  background: #eef4ff;
+}
+
+.fileButton input { display: none; }
+.fileButton, .uploadPrimary {
+  background: #1a73e8;
+  color: #fff;
+  border: 0;
+  border-radius: 999px;
+  padding: 10px 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-block;
+}
+.fileButton:hover, .uploadPrimary:hover { background: #174ea6; }
+.uploadPrimary:disabled { opacity: .5; cursor: not-allowed; }
+
+.uploadHint, .uploadStatus {
+  margin: 10px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.fileList {
+  margin: 20px 0 0;
+  padding: 0;
+  list-style: none;
+  text-align: left;
+}
+.fileList li {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+.fileList button {
+  background: none;
+  border: none;
+  color: #b91c1c;
+  cursor: pointer;
+}

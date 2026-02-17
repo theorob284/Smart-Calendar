@@ -1,0 +1,139 @@
+.page {
+  min-height: calc(100vh - 64px); 
+  padding: 12px;
+}
+
+.calendarWrap {
+  height: calc(100vh - 64px - 24px); 
+}
+
+.fc {
+  font-family: 'Segoe UI', Roboto, sans-serif;
+  --fc-border-color: #e5e7eb;
+  --fc-neutral-bg-color: #ffffff;
+  --fc-page-bg-color: #ffffff;
+  --fc-today-bg-color: rgba(66, 133, 244, 0.05);
+
+  --fc-button-bg-color: #1a73e8;
+  --fc-button-border-color: #1a73e8;
+  --fc-button-hover-bg-color: #1557b0;
+  --fc-button-hover-border-color: #1557b0;
+  --fc-button-text-color: #ffffff;
+}
+
+.fc .fc-scrollgrid {
+  border: none;
+}
+
+.fc .fc-daygrid-day {
+  border: 1px solid #e2e5e9;
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: #f8f9fa;
+  cursor: pointer;
+}
+
+.fc .fc-daygrid-day-number {
+  font-size: 13px;
+  font-weight: 500;
+  color: #5f6368;
+  padding: 6px;
+}
+
+.fc .fc-daygrid-day-frame {
+  padding: 6px;
+}
+
+.fc .fc-daygrid-event {   
+  border-radius: 14px;         
+  padding: 3px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  background-color: #1a73e8;
+  color: #ffffff;
+  border: 1px solid #d2e3fc;
+  min-height: 30px;
+  display: flex;
+  align-items: center;
+}
+
+.fc .fc-daygrid-event:hover {
+  filter: brightness(0.95);
+  cursor: pointer;
+  min-height: 35px;
+  background-color: #1557b0;
+}
+
+.fc .fc-daygrid-event-dot {
+  display: none;
+}
+
+.fc .fc-event-time {
+  opacity: 0.8;
+  font-weight: 400;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 20px;
+  font-weight: 500;
+  color: #202124;
+}
+
+.fc .fc-button {
+  border-radius: 20px;
+  padding: 6px 14px;
+  font-weight: 500;
+  box-shadow: none;
+}
+
+.fc .fc-event-title {
+  font-weight: 500;
+}
+
+.fc .fc-timegrid-col {
+  border-right: 1px solid #e2e5e9;
+}
+
+.fc .fc-timegrid-slot {
+  border-top: 1px solid #e9ecef;
+}
+
+.fc .fc-timegrid-slot-minor {
+  border-top: 1px solid #f5f6f7;
+}
+
+.fc .fc-timegrid-divider {
+  border-color: #e2e5e9;
+}
+
+.fc .fc-timegrid-axis {
+  border-right: 1px solid #e2e5e9;
+}
+
+.fc .fc-timegrid-axis-cushion, .fc .fc-timegrid-slot-label-cushion {
+  color: #6b7280;   
+  font-weight: 400;   
+  font-size: 12px;      
+}
+
+.fc .fc-timegrid-axis-frame {
+  padding-right: 8px;
+}
+
+.fc .fc-timegrid-slot-label {
+  border-color: #f3f4f6;
+}
+
+.fc .fc-header-toolbar {
+  padding: 10px 12px;
+  margin-bottom: 12px;              
+  border-bottom: 1px solid #e2e5e9; 
+  background: #ffffff;
+
+}
+
+.fc .fc-button-primary.fc-button-active {
+  background-color: #174ea6 !important;
+  border-color: #174ea6 !important;
+}

@@ -4,16 +4,24 @@ import dayGridPlugin from '@fullcalendar/daygrid'
 import timeGridPlugin from '@fullcalendar/timegrid'
 import listPlugin from '@fullcalendar/list'
 import multiMonthPlugin from '@fullcalendar/multimonth'
+import interactionPlugin from '@fullcalendar/interaction'
+import "../CSS/Calendar.css"
 
 
-const MyCalendar = ({myEvents}) => {
+const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
 
   return (
-    <FullCalendar
-        plugins={[ dayGridPlugin, timeGridPlugin, listPlugin,multiMonthPlugin ]}
-        initialView="dayGridMonth"
+    <FullCalendar height="100%" expandRows={true}
+        plugins={[ dayGridPlugin, timeGridPlugin, listPlugin, multiMonthPlugin, interactionPlugin ]}
+        initialView="timeGridWeek"
         events={myEvents}
-
+        dateClick={onDateClick}
+        eventClick={onEventClick}
+        dayMaxEvents={true}
+        displayEventTime={false}
+        slotLabelInterval={{ hours: 2 }}
+        dayHeaderFormat={{ weekday: "short", day: "2-digit", month: "2-digit" }}
+        
         views = {{
            multiMonth3:{
               type: 'multiMonth', 
@@ -27,7 +35,7 @@ const MyCalendar = ({myEvents}) => {
         headerToolbar = {{
           left: 'prev,next' ,
           center: 'title', 
-          right: 'dayGridMonth, timeGridWeek, listDay, multiMonth3'
+          right: 'timeGridWeek, dayGridMonth, listWeek, multiMonth3'
         }}
     />
   )

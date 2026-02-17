@@ -18,7 +18,6 @@ class EventSerializer(serializers.ModelSerializer):
             "location",
             "event_type",
             "confidence",
-            "group",
         ]
 
     def validate(self, data):

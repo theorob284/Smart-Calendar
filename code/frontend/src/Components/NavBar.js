@@ -10,15 +10,11 @@ const Navbar = () => {
       </div>
       <div className="navbar-center">
         <ul className="nav-links">
-          <li><a href="/upload">Import Calendars</a></li>
-          <li><a href="/">Blank</a></li>
-          <li><a href="/">Blank</a></li>
+          <li><a href="/upload">Import Calendar</a></li>
         </ul>
       </div>
       <div className="navbar-right">
-        <a href="/" className="nav-links">
-          <li><a href="/">Sign In</a></li>
-        </a>
+        <h5>Personalise your Calendar</h5>
       </div>
     </nav>
   );
