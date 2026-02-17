@@ -1,0 +1,20 @@
+/* Shared pill buttons used across pages/modals */
+.btnPrimary, .btnGhost, .btnDanger {
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: 0.2s ease;
+}
+
+.btnPrimary { background: #1a73e8; color: #fff; }
+.btnPrimary:hover { background: #174ea6; }
+
+.btnGhost { background: #fff; border-color: #e2e5e9; color: #374151; }
+.btnGhost:hover { background: #f7f8fa; border-color: #cfd4da; }
+
+.btnDanger { background: #fff; border-color: #fecaca; color: #b91c1c; }
+.btnDanger:hover { background: #fef2f2; }

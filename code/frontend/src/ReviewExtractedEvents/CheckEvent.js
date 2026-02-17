@@ -4,6 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import SmartPlanPanel from "../SmartLogic/SmartUI";
 import Modal from "../Components/Modal";
 import "../CSS/Modal.css"
+import "../CSS/checkEvent.css"
 
 export default function CheckExtractedEvent() {
   const navigate = useNavigate();
@@ -139,61 +140,100 @@ export default function CheckExtractedEvent() {
   };
 
   return (
-    <div>
-      <h1>Check Event</h1>
+    <div className="checkPage">
+      <div className="checkHeader">
+        <div>
+          <h1>Check Events</h1>
+          <p className="checkSub">Review extracted items before adding them to your calendar.</p>
+        </div>
 
-      <div>
-        <button onClick={AcceptAll} disabled={accepting}>Accept all Events</button>
-        {accepting && (<p>Processing {counter} of {checkevent.length}</p>)}
-
-        <button onClick={RejectAll} disabled={rejecting}>Reject all Events</button>
-        {rejecting && (<p>Processing {counterRej} of {checkevent.length}</p>)}
-      </div>
-
-      <button className="uploadPrimary" onClick={() => setOpenModal(true)}>Smart Plan</button>
+        <div className="checkActions">
+          <button className="btnPrimary" onClick={AcceptAll} disabled={accepting}> Accept all</button>
+          <button className="btnDanger" onClick={RejectAll} disabled={rejecting}> Reject all</button>
+          <button className="btnGhost" onClick={() => setOpenModal(true)}>Smart Plan</button>
+        </div>
+     </div>
+      {accepting && <p className="checkStatus">Processing {counter} of {checkevent.length}</p>}
+      {rejecting && <p className="checkStatus">Processing {counterRej} of {checkevent.length}</p>}
 
       <Modal open={openModal} title="Smart Plan Preferences"onClose={() => setOpenModal(false)} >
         <SmartPlanPanel docID={docID} onApplied={async () => { await handleSmartApplied(); setOpenModal(false);}}/>
       </Modal>
 
-      {checkevent.map((c) => (
-        <div key={c.id} style={{ marginTop: 16 }}>
-          {editId === c.id ? (
-            <div>
-              <input value={form.title} onChange={(e) =>setForm({ ...form, title: e.target.value })}/>
-              <input type="datetime-local" value={form.start_time} onChange={(e) =>setForm({ ...form, start_time: e.target.value })}/>
-              <input type="datetime-local" value={form.end_time} onChange={(e) =>setForm({ ...form, end_time: e.target.value })}/>
-              <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}/>
-              <input value={form.description} onChange={(e) =>setForm({ ...form, description: e.target.value })}/>
+      <div className="checkList">
+        {checkevent.map((c) => {
+          const startLabel = c.start_time ? new Date(c.start_time).toLocaleString() : "No start time";
+          const endLabel = c.end_time ? new Date(c.end_time).toLocaleString() : "No end time";
 
-              <button onClick={() => edit(c.id)}>Save</button>
-              <button onClick={() => setEditId(null)}>Cancel</button>
-            </div> ) : (
-            <div>
-              <p>{c.title}</p>
-              <p>{c.start_time}</p>
-              <p>{c.end_time}</p>
-              <p>{c.location}</p>
-              <p>{c.raw_text}</p>
-              <p>Conflicts: {conflictbyid[c.id] ?? 0}</p>
+          return (
+            <div key={c.id} className="checkCard">
+              {editId === c.id ? (<>
+                  <div className="editGrid">
+                    <div className="editField">
+                      <label>Title</label>
+                      <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}/>
+                    </div>
+                    <div className="editField">
+                      <label>Start</label>
+                      <input type="datetime-local" value={form.start_time}  onChange={(e) => setForm({ ...form, start_time: e.target.value })}/>
+                    </div>
+                    <div className="editField">
+                      <label>End</label>
+                      <input type="datetime-local" value={form.end_time} onChange={(e) => setForm({ ...form, end_time: e.target.value })} />
+                    </div>
+                    <div className="editField">
+                      <label>Location</label>
+                      <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}/>
+                    </div>
+                    <div className="editField fullWidth">
+                      <label>Description</label>
+                      <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}/>
+                    </div>
+                  </div>
 
-              <button onClick={() => accept(c.id)}>Accept</button>
+                  <div className="checkCardActions">
+                    <button className="btnPrimary" onClick={() => edit(c.id)}>Save</button>
+                    <button className="btnGhost" onClick={() => setEditId(null)}>Cancel</button>
+                  </div>
+                </>
+              ) : (<>
+                  <div className="checkCardTop">
+                    <div>
+                      <div className="checkTitle">{c.title || "Untitled event"}</div>
+                      <div className="checkMeta">
+                        <span>{startLabel}</span>
+                        <span>→</span>
+                        <span>{endLabel}</span>
+                      </div>
+                      {c.location && <div className="checkMeta">{c.location}</div>}
+                    </div>
+                    <div className="checkBadge">Conflicts: {conflictbyid[c.id] ?? 0}</div>
+                  </div>
 
-              <button onClick={() => {
-                  setEditId(c.id);
-                  setForm({
-                    title: c.title || "",
-                    start_time: (c.start_time || "").replace("Z", "").slice(0, 16),
-                    end_time: (c.end_time || "").replace("Z", "").slice(0, 16),
-                    location: c.location || "",
-                    description: c.description || c.raw_text || "",
-                  }); }}>Edit </button>
+                  {(c.raw_text) && (<div className="checkRaw">{c.description || c.raw_text}</div>)}
 
-              <button onClick={() => reject(c.id)}>Reject</button>
+                  <div className="checkCardActions">
+                    <button className="btnPrimary" onClick={() => accept(c.id)}> Accept</button>
+                    <button className="btnGhost"
+                      onClick={() => {
+                        setEditId(c.id);
+                        setForm({
+                          title: c.title || "",
+                          start_time: (c.start_time || "").replace("Z", "").slice(0, 16),
+                          end_time: (c.end_time || "").replace("Z", "").slice(0, 16),
+                          location: c.location || "",
+                          description: c.description || c.raw_text || "",
+                        });
+                      }}> Edit</button>
+
+                    <button className="btnDanger" onClick={() => reject(c.id)}> Reject</button>
+                  </div>
+                </>
+              )}
             </div>
-          )}
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }

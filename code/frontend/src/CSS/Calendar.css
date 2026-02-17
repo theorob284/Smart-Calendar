@@ -62,8 +62,6 @@
   filter: brightness(0.95);
   cursor: pointer;
   min-height: 35px;
-  display: flex;
-  align-items: center;
   background-color: #1557b0;
 }
 
