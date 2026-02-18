@@ -171,7 +171,7 @@ export default function CheckExtractedEvent() {
                   <div className="editGrid">
                     <div className="editField">
                       <label>Title</label>
-                      <input value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })}/>
+                      <input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })}/>
                     </div>
                     <div className="editField">
                       <label>Start</label>
@@ -183,7 +183,7 @@ export default function CheckExtractedEvent() {
                     </div>
                     <div className="editField">
                       <label>Location</label>
-                      <input value={form.location} onChange={(e) => setForm({ ...form, location: e.target.value })}/>
+                      <input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })}/>
                     </div>
                     <div className="editField fullWidth">
                       <label>Description</label>

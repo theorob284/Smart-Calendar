@@ -3,10 +3,10 @@ from django.db import models
 # Create your models here.
 
 class Event(models.Model):
-    title = models.CharField(max_length=30)
+    title = models.CharField(max_length=150)
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
-    location = models.CharField(max_length=100, blank = True)
+    location = models.CharField(max_length=150, blank = True)
     event_type = models.CharField(max_length=30, blank = True)
     confidence = models.DecimalField(max_digits=3, decimal_places=2, null= True, blank=True)
 
