@@ -20,7 +20,7 @@ const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
         dayMaxEvents={true}
         displayEventTime={false}
         slotLabelInterval={{ hours: 2 }}
-        dayHeaderFormat={{ weekday: "short", day: "2-digit", month: "2-digit" }}
+        //dayHeaderFormat={{ weekday: "short", day: "2-digit", month: "2-digit" }}
         
         views = {{
            multiMonth3:{
@@ -29,7 +29,9 @@ const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
               titleFormat: {month: 'short', year: 'numeric'}, 
               columnHeaderFormat: {weekday:'short'},
               buttonText: "3 Months"
-           }
+           },
+           timeGridWeek: { dayHeaderFormat: { weekday: "short", day: "2-digit", month: "2-digit" }},
+           dayGridMonth: {dayHeaderFormat: { weekday: "short" }}
         }}
 
         headerToolbar = {{
