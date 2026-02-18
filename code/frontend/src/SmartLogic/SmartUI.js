@@ -22,7 +22,10 @@ export default function SmartPlanUI({ docID, onApplied }) {
       </label>
 
       <span className="smartSub">Max shift (mins):</span>
-      <input className="smartInput" type="number" min={0} max={1440} value={maxTimeShift} onChange={(e) => setMaxTimeShift(Number(e.target.value))} disabled={!allowReschedule}/>
+      <input className="smartInput" type="number" min={0} max={1440} value={maxTimeShift} disabled={!allowReschedule} onChange={(e) => { 
+        let value = Number(e.target.value);
+        value = Math.max(0, Math.min(1440, value))
+        setMaxTimeShift(value)}}/>
     </div>
 
     <div className="smartRow">
@@ -33,9 +36,22 @@ export default function SmartPlanUI({ docID, onApplied }) {
 
     <div className="smartRow">
       <span className="smartSub">Work hours:</span>
-      <input className="smartInput" type="number" min={0} max={23} value={workStartHour} onChange={(e) => setWorkStartHour(Number(e.target.value))} disabled={!useWorkHours}/>
+      <input className="smartInput" type="number" min={0} max={23} value={workStartHour} disabled={!useWorkHours} onChange={(e) => { 
+        let value = Number(e.target.value);
+        value = Math.max(0, Math.min(23, value));
+        if (value >= workEndHour){
+          value = workEndHour - 1
+        }
+        setWorkStartHour(value)} 
+        }/>
       <span className="smartSub">to</span>
-      <input className="smartInput" type="number" min={1} max={24} value={workEndHour} onChange={(e) => setWorkEndHour(Number(e.target.value))} disabled={!useWorkHours}/>
+      <input className="smartInput" type="number" min={1} max={24} value={workEndHour} disabled={!useWorkHours} onChange={(e) => {
+        let value = Number(e.target.value);
+        value = Math.max(0, Math.min(23, value));
+        if (value <= workStartHour) {
+          value = workStartHour + 1
+        }
+        setWorkEndHour(value)}} />
     </div>
 
     <div className="smartRow">
@@ -46,7 +62,11 @@ export default function SmartPlanUI({ docID, onApplied }) {
 
     <div className="smartRow">
       <span className="smartSub">Event buffer (mins):</span>
-      <input className="smartInput" type="number" min={0} max={120} value={bufferMinutes} onChange={(e) => setBufferMinutes(Number(e.target.value))}/>
+      <input className="smartInput" type="number" min={0} max={160} value={bufferMinutes} onChange={(e) => { 
+        let value = Number(e.target.value);
+        if (value > 160) value = 160
+        if (value < 0) value = 0
+        setBufferMinutes(value)}}/>
     </div>
 
     <div className="smartRow">

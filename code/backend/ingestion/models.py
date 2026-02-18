@@ -19,13 +19,13 @@ class ExtractedEventCandidate(models.Model):
 
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name="candidates")
 
-    title = models.CharField(max_length=50, blank = True)
+    title = models.CharField(max_length=150, blank = True)
     start_time = models.DateTimeField(null=True, blank=True)
     end_time = models.DateTimeField(null=True, blank=True)
 
     location = models.CharField(max_length=300, blank=True)
-    description = models.TextField(max_length= 5000 ,blank=True)
-    event_type = models.TextField(max_length=50, blank=True)
+    description = models.TextField(max_length= 400 ,blank=True)
+    event_type = models.TextField(max_length=30, blank=True)
 
     confidence = models.DecimalField(max_digits=4, decimal_places=2, null=True, blank=True)
     status = models.CharField(max_length=16, choices = Status.choices, default=Status.pending)

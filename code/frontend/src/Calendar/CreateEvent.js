@@ -40,7 +40,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
       <div>
         <label className="field">
           <span>Title</span>
-          <input name="title" value={formData.title} onChange={handleChange}/>
+          <input name="title" maxLength={150} value={formData.title} onChange={handleChange}/>
         </label>
 
         <div className="grid2">
@@ -58,25 +58,23 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
         <div className="grid2">
           <label className="field">
             <span>Location</span>
-            <input name="location" value={formData.location} onChange={handleChange}/>
+            <input name="location" maxLength={150} value={formData.location} onChange={handleChange}/>
           </label>
 
           <label className="field">
             <span>Type</span>
-            <input name="event_type" value={formData.event_type} onChange={handleChange}/>
+            <input name="event_type" maxLength={30} value={formData.event_type} onChange={handleChange}/>
           </label>
         </div>
 
         <label className="field">
             <span>Description</span>
-            <input name="description" value={formData.description} onChange={handleChange}/>
+            <input name="description" maxLength={400} value={formData.description} onChange={handleChange}/>
         </label>
 
         <div className="modalFooter">
           <button className="btnPrimary" onClick={handleSubmit}> Save</button>
-
           {selectedEvent?.id && ( <button className="btnDanger" onClick={onDelete}> Delete</button>)}
-
           <button className="btnGhost" onClick={onClose}> Cancel</button>
         </div>
       </div>
