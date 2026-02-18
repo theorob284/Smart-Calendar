@@ -5,6 +5,7 @@ import SmartPlanPanel from "../SmartLogic/SmartUI";
 import Modal from "../Components/Modal";
 import "../CSS/Modal.css"
 import "../CSS/checkEvent.css"
+import "../CSS/EventModal.css"
 
 export default function CheckExtractedEvent() {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ export default function CheckExtractedEvent() {
     start_time: "",
     end_time: "",
     location: "",
+    event_type: "",
     description: "",
   });
   const [openModal, setOpenModal] = useState(false);
@@ -126,6 +128,7 @@ export default function CheckExtractedEvent() {
       start_time: form.start_time,
       end_time: form.end_time,
       location: form.location,
+      event_type: form.event_type,
       description: form.description,
     });
 
@@ -168,11 +171,12 @@ export default function CheckExtractedEvent() {
           return (
             <div key={c.id} className="checkCard">
               {editId === c.id ? (<>
+                  
+                  <div className="field">
+                    <label>Title</label>
+                    <input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })}/>
+                  </div>
                   <div className="editGrid">
-                    <div className="editField">
-                      <label>Title</label>
-                      <input value={form.title} maxLength={150} onChange={(e) => setForm({ ...form, title: e.target.value })}/>
-                    </div>
                     <div className="editField">
                       <label>Start</label>
                       <input type="datetime-local" value={form.start_time}  onChange={(e) => setForm({ ...form, start_time: e.target.value })}/>
@@ -185,9 +189,13 @@ export default function CheckExtractedEvent() {
                       <label>Location</label>
                       <input value={form.location} maxLength={150} onChange={(e) => setForm({ ...form, location: e.target.value })}/>
                     </div>
+                    <div className="editField">
+                      <label>Type</label>
+                      <input value={form.event_type} maxLength={150} onChange={(e) => setForm({ ...form, event_type: e.target.value })}/>
+                    </div>
                     <div className="editField fullWidth">
                       <label>Description</label>
-                      <input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })}/>
+                      <input value={form.description} maxLength={400} onChange={(e) => setForm({ ...form, description: e.target.value })}/>
                     </div>
                   </div>
 
@@ -210,8 +218,6 @@ export default function CheckExtractedEvent() {
                     <div className="checkBadge">Conflicts: {conflictbyid[c.id] ?? 0}</div>
                   </div>
 
-                  {(c.raw_text) && (<div className="checkRaw">{c.description || c.raw_text}</div>)}
-
                   <div className="checkCardActions">
                     <button className="btnPrimary" onClick={() => accept(c.id)}> Accept</button>
                     <button className="btnGhost"
@@ -222,7 +228,8 @@ export default function CheckExtractedEvent() {
                           start_time: (c.start_time || "").replace("Z", "").slice(0, 16),
                           end_time: (c.end_time || "").replace("Z", "").slice(0, 16),
                           location: c.location || "",
-                          description: c.description || c.raw_text || "",
+                          event_type: c.event_type || "",
+                          description: c.description || "",
                         });
                       }}> Edit</button>
 

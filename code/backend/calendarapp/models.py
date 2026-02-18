@@ -7,6 +7,7 @@ class Event(models.Model):
     start_time = models.DateTimeField()
     end_time = models.DateTimeField()
     location = models.CharField(max_length=150, blank = True)
+    description = models.CharField(max_length=400, blank = True)
     event_type = models.CharField(max_length=30, blank = True)
     confidence = models.DecimalField(max_digits=3, decimal_places=2, null= True, blank=True)
 

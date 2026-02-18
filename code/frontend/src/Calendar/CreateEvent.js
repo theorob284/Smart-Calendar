@@ -10,6 +10,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
     end_time: "",
     location: "",
     event_type: "",
+    description: "",
   });
 
   useEffect(() => {
@@ -25,6 +26,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
         end_time: formatDate(selectedEvent.end_time),
         location: selectedEvent.location || "",
         event_type: selectedEvent.event_type || "",
+        description: selectedEvent.description || "",
       });
   }}, [selectedEvent]);
 
@@ -64,6 +66,11 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
             <input name="event_type" value={formData.event_type} onChange={handleChange}/>
           </label>
         </div>
+
+        <label className="field">
+            <span>Description</span>
+            <input name="description" value={formData.description} onChange={handleChange}/>
+        </label>
 
         <div className="modalFooter">
           <button className="btnPrimary" onClick={handleSubmit}> Save</button>

@@ -52,7 +52,8 @@ class FileUploadAPIView(generics.CreateAPIView):
                         "end_time": None,
                         "location": "",
                         "confidence": 0.2,
-                        "raw_text": text[:5000],  # avoid huge DB entry
+                        "description": "",  # avoid huge DB entry
+                        "event_type": "",
                     }]
             elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
                 text = extractOCR(file_path)
@@ -60,20 +61,22 @@ class FileUploadAPIView(generics.CreateAPIView):
                 if not candidates:
                     candidates = [{
                         "title": f"OCR pending for image: {name}",
-                        "raw_text": "Image uploaded. OCR not implemented yet.",
+                        "description": "Image uploaded. OCR not implemented yet.",
                         "confidence": 0.0,
                         "start_time": None,
                         "end_time": None,
                         "location": "",
+                        "event_type": "",
                     }]
             else:
                 candidates = [{
                     "title": "Unsupported file type (stored only)",
                     "confidence": 0.0,
-                    "raw_text": name,
+                    "description": name,
                     "start_time": None,
                     "end_time": None,
                     "location": "",
+                    "event_type": ""
                 }]
             return candidates
 
@@ -89,7 +92,8 @@ class FileUploadAPIView(generics.CreateAPIView):
                     start_time=c.get("start_time"),
                     end_time=c.get("end_time"),
                     location=c.get("location", ""),
-                    raw_text=c.get("raw_text", ""),
+                    description=c.get("description", ""),
+                    event_type = c.get("event_type", ""),
                     confidence=c.get("confidence"),
                 )
                 created.append({
@@ -98,6 +102,8 @@ class FileUploadAPIView(generics.CreateAPIView):
                     "start_time": obj.start_time,
                     "end_time": obj.end_time,
                     "location": obj.location,
+                    "event_type": obj.event_type,
+                    "description": obj.description,
                     "confidence": obj.confidence,
                 })
             if childDoc.file:
@@ -187,6 +193,8 @@ class CandidateView(viewsets.ModelViewSet):
             "start_time": cand.start_time,
             "end_time": cand.end_time,
             "location": cand.location,
+            "event_type": cand.event_type,
+            "description": cand.description,
             "confidence": cand.confidence
         }
 

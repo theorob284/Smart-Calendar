@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import "../CSS/Upload.css"
 
 export default function Upload({onUploaded}) {
-    const [multipleFiles, setMultipleFiles] = useState([]);
+  const [multipleFiles, setMultipleFiles] = useState([]);
   const [status, setStatus] = useState("");
   const [dragActive, setDragActive] = useState(false);
   const navigate = useNavigate();

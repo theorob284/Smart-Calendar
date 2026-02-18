@@ -26,6 +26,9 @@ def parse_ics(file_path):
         start_dt = dtstart.dt if dtstart else None
         end_dt = dtend.dt if dtend else None
 
+        description = component.get("description", "")
+        event_type = component.get("event_type", "")
+
         # Some ICS files omit dtend; assume 1 hour if missing
         if start_dt and not end_dt:
             end_dt = start_dt + timedelta(hours=1)
@@ -38,7 +41,8 @@ def parse_ics(file_path):
             "end_time": end_dt,
             "location": location,
             "confidence": 1.0,
-            "raw_text": title,
+            "description": description,
+            "event_type": event_type,
         })
 
     return results
@@ -254,7 +258,8 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
             "end_time": end,
             "location": location,
             "confidence": min(confidence, 0.95),
-            #"raw_text": sent[:5000]
+            "description": "",
+            "event_type": ""
         })
 
     return candidates

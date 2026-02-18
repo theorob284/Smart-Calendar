@@ -21,6 +21,7 @@ const Calendar = () => {
       start_time: info.dateStr + "T09:00",
       end_time: info.dateStr + "T10:00",
       location: "",
+      description: "",
       event_type: "",
     });
     setModalOpen(true);
@@ -32,6 +33,7 @@ const Calendar = () => {
       title: info.event.title,
       start_time: info.event.startStr,
       end_time: info.event.endStr,
+      description: info.event.extendedProps.description,
       location: info.event.extendedProps.location,
       event_type: info.event.extendedProps.event_type,
     });

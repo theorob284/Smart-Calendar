@@ -12,7 +12,7 @@ class EventViewSet(viewsets.ModelViewSet):
     #queryset = Event.objects.all().order_by("start_time") 
     serializer_class = EventSerializer
 
-    ordered_Fields = {"start_time", "end_time", "title", "event_type", "location"}
+    ordered_Fields = {"start_time", "end_time", "title", "location", "event_type", "description"}
 
     def perform_create(self, serializer):
         event = serializer.save()
@@ -27,10 +27,6 @@ class EventViewSet(viewsets.ModelViewSet):
         if event_type:
             queryset = queryset.filter(event_type=event_type)
         
-        group = self.request.query_params.get("group")
-        if group:
-            queryset = queryset.filter(group_id=group)
-        
         location = self.request.query_params.get("location")
         if location:
             queryset = queryset.filter(location__icontains=location)
@@ -38,6 +34,10 @@ class EventViewSet(viewsets.ModelViewSet):
         title = self.request.query_params.get("title")
         if title:
             queryset = queryset.filter(title__icontains=title)
+
+        description = self.request.query_params.get("description")
+        if description:
+            queryset = queryset.filter(description=description)
 
         start_param = self.request.query_params.get("start")
         end_param = self.request.query_params.get("end")
