@@ -1,9 +1,10 @@
 from django.db import models
 from django.utils import timezone
-
+from django.conf import settings
 
 # Create your models here.
 class Document (models.Model):
+    owner = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="documents",)
     title = models.CharField(max_length=255)
     file = models.FileField(upload_to='documents/')
 

@@ -9,6 +9,10 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
+from django.contrib.auth.models import User
+from rest_framework import serializers
+from rest_framework.permissions import AllowAny
 
 from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer, SmartPlanSerializer
@@ -17,8 +21,34 @@ from calendarapp.serializers import EventSerializer
 from calendarapp.models import Event
 from calendarapp.utils import CreateConflictRecord
 
+class RegisterSerializer(serializers.Serializer):
+    username = serializers.CharField(max_length=150)
+    password = serializers.CharField(min_length=8, write_only=True)
+
+    def validate_username(self, value):
+        value = value.strip()
+        if not value:
+            raise serializers.ValidationError("Username is required.")
+        if User.objects.filter(username=value).exists():
+            raise serializers.ValidationError("That username is already taken.")
+        return value
+
+class RegisterView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        ser = RegisterSerializer(data=request.data)
+        ser.is_valid(raise_exception=True)
+
+        user = User.objects.create_user(
+            username=ser.validated_data["username"],
+            password=ser.validated_data["password"],
+        )
+        return Response({"id": user.id, "username": user.username}, status=status.HTTP_201_CREATED)
+
 class FileUploadAPIView(generics.CreateAPIView):
-    queryset = Document.objects.all()
+    permission_classes = [IsAuthenticated]
+    queryset = Document.objects.none()
     serializer_class = DocumentSerializer
     parser_classes = (MultiPartParser, FormParser)
 
@@ -34,13 +64,14 @@ class FileUploadAPIView(generics.CreateAPIView):
         if not files:
             return Response({"detail": "No files provided."}, status=status.HTTP_400_BAD_REQUEST)
         
+        
         for f in files:
             ext = os.path.splitext(f.name.lower())[1]
             if ext not in allowed_ext:
                 raise ValidationError({"error": "unsupported_file_type","message": f"{f.name} is not supported."})
         
         FilesTitle = request.data.get("title") or f"Upload ({len(files)} files)"
-        FilesDoc = Document.objects.create(title=FilesTitle)
+        FilesDoc = Document.objects.create(title=FilesTitle, owner=request.user)
 
         def parseFiles(file_path,name):
             candidates = []
@@ -79,7 +110,7 @@ class FileUploadAPIView(generics.CreateAPIView):
 
         created = []
         for f in files:
-            childDoc = Document.objects.create(title=f.name, file=f)
+            childDoc = Document.objects.create(title=f.name, file=f, owner=request.user)
             file_path = childDoc.file.path
             candidates = parseFiles(file_path, childDoc.file.name)
             for c in candidates:
@@ -120,11 +151,11 @@ class FileUploadAPIView(generics.CreateAPIView):
 
 class CandidateView(viewsets.ModelViewSet):
     serializer_class = ExtractedEventCandidateSerializer
-    queryset = ExtractedEventCandidate.objects.all().order_by("id")
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
 
-        qs = super().get_queryset()
+        qs = ExtractedEventCandidate.objects.filter(document__owner=self.request.user).order_by("id")
 
         document_id = self.request.query_params.get("document")
         if document_id:
@@ -197,8 +228,7 @@ class CandidateView(viewsets.ModelViewSet):
 
         serializer = EventSerializer(data=ConvertToEvent)
         serializer.is_valid(raise_exception=True)
-        event = serializer.save()
-
+        event = serializer.save(owner=request.user)
         CreateConflictRecord(event)
 
         cand.status = ExtractedEventCandidate.Status.approved
@@ -209,6 +239,7 @@ class CandidateView(viewsets.ModelViewSet):
         return Response({"candidate": self.get_serializer(cand).data,"event": serializer.data}, status=201)
     
 class SmartPlanView(APIView):
+    permission_classes = [IsAuthenticated]
     def post(self, request):
         SmartSerializer = SmartPlanSerializer(data=request.data)
         SmartSerializer.is_valid(raise_exception=True)
@@ -216,11 +247,12 @@ class SmartPlanView(APIView):
 
         CandidateSet = ExtractedEventCandidate.objects.filter(
             status=ExtractedEventCandidate.Status.pending,
-            document_id__in=data["GetDocumentIds"]
+            document_id__in=data["GetDocumentIds"],
+            document__owner=request.user,
         )
 
         if data["ExistingEvents"]:
-            existing = list(Event.objects.all())
+            existing = list(Event.objects.filter(owner=request.user))
         else:
             existing = []
         
@@ -377,7 +409,7 @@ class SmartPlanView(APIView):
                 penalties = 0.0
                 penalties += data["MovePenalty"] * moved
                 penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
-                BufferMinutes = data["BufferTime"]
+                BufferMinutes = data["BufferMinutes"]
                 BufferPenalty = data["BufferPenalty"]
                 BufferRule = 0.0
 

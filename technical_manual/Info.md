@@ -29,5 +29,6 @@ python -m pip install pillow
 pip install python-dateutil
 pip install tesseract
 pip install pytesseract pillow
+pip install djangorestframework-simplejwt
 
 https://docs.python.org/3/library/re.html regex docs
