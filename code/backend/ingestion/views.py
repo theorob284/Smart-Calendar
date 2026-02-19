@@ -16,6 +16,7 @@ from calendarapp.serializers import EventSerializer
 from calendarapp.models import Event
 from calendarapp.utils import CreateConflictRecord
 
+#convert uploads into ExtractedEventCandidate records
 class FileUploadAPIView(generics.CreateAPIView):
     queryset = Document.objects.all()
     serializer_class = DocumentSerializer
@@ -23,6 +24,7 @@ class FileUploadAPIView(generics.CreateAPIView):
 
     def create(self, request, *args, **kwargs):
 
+        #accept multiple files if needed
         files = request.FILES.getlist("files")
         if not files:
             OneFile =  request.FILES.get("file")
@@ -34,10 +36,13 @@ class FileUploadAPIView(generics.CreateAPIView):
         
         FilesTitle = request.data.get("title") or f"Upload ({len(files)} files)"
         FilesDoc = Document.objects.create(title=FilesTitle)
+        #create parent doc to represent batch
 
+        #multiple filetypes supported (.ics, .pdf, images)
         def parseFiles(file_path,name):
             candidates = []
             ext = os.path.splitext(name.lower())[1]
+            #parsing logic based on file extension
             if ext == ".ics":
                 candidates = parse_ics(file_path)
 
@@ -58,6 +63,7 @@ class FileUploadAPIView(generics.CreateAPIView):
             elif ext in [".png", ".jpg", ".jpeg", ".webp"]:
                 text = extractOCR(file_path)
                 candidates = ExtractedTextToEvent(text)
+                #if OCR yields no usable events
                 if not candidates:
                     candidates = [{
                         "title": f"OCR pending for image: {name}",
@@ -68,6 +74,7 @@ class FileUploadAPIView(generics.CreateAPIView):
                         "location": "",
                         "event_type": "",
                     }]
+            #minimal placeholder is stored in case of unsupported file type 
             else:
                 candidates = [{
                     "title": "Unsupported file type (stored only)",
@@ -81,10 +88,14 @@ class FileUploadAPIView(generics.CreateAPIView):
             return candidates
 
         created = []
+        #each file is processed independently
         for f in files:
+            # temporarily save uploaded file
             childDoc = Document.objects.create(title=f.name, file=f)
             file_path = childDoc.file.path
+            # file is parsed into event candidate dicts...
             candidates = parseFiles(file_path, childDoc.file.name)
+            # and then converted into DB rows
             for c in candidates:
                 obj = ExtractedEventCandidate.objects.create(
                     document=FilesDoc,
@@ -96,6 +107,7 @@ class FileUploadAPIView(generics.CreateAPIView):
                     event_type = c.get("event_type", ""),
                     confidence=c.get("confidence"),
                 )
+                # collect response metadata
                 created.append({
                     "id": obj.id,
                     "title": obj.title,
@@ -106,6 +118,7 @@ class FileUploadAPIView(generics.CreateAPIView):
                     "description": obj.description,
                     "confidence": obj.confidence,
                 })
+            #cleanup file storage
             if childDoc.file:
                 childDoc.file.delete(save=True)
             childDoc.delete()
@@ -121,10 +134,11 @@ class FileUploadAPIView(generics.CreateAPIView):
             status=status.HTTP_201_CREATED,
         )
 
+#CRUD & review for extracted candidates
 class CandidateView(viewsets.ModelViewSet):
     serializer_class = ExtractedEventCandidateSerializer
     queryset = ExtractedEventCandidate.objects.all().order_by("id")
-
+    # filtering by document of status
     def get_queryset(self):
 
         qs = super().get_queryset()
@@ -138,7 +152,7 @@ class CandidateView(viewsets.ModelViewSet):
             qs = qs.filter(status=GetStatus)
         
         return qs
-    
+    #only allow editing while candidate is still pending
     def update(self, request, *args, **kwargs):
         
         cand = self.get_object()
@@ -160,6 +174,7 @@ class CandidateView(viewsets.ModelViewSet):
         return Response(self.get_serializer(cand).data)
     @action(detail=True, methods=["post"])
 
+    # accept candidate and convert into real event
     def accept(self, request, pk=None):
         cand = self.get_object()
 
@@ -185,6 +200,8 @@ class CandidateView(viewsets.ModelViewSet):
             cand.start_time = ParsedStart
             cand.end_time = ParsedEnd
         
+
+        #ensure valid time range
         if not cand.start_time or not cand.end_time:
             return Response({"error": "Missing start or end time"}, status=400)
         
@@ -198,12 +215,14 @@ class CandidateView(viewsets.ModelViewSet):
             "confidence": cand.confidence
         }
 
+        #create real calendar event
         serializer = EventSerializer(data=ConvertToEvent)
         serializer.is_valid(raise_exception=True)
         event = serializer.save()
 
-        CreateConflictRecord(event)
+        CreateConflictRecord(event)     #compute conflicts
 
+        #mark candidates as approved
         cand.status = ExtractedEventCandidate.Status.approved
         cand.reviewed_at = timezone.now()
         cand.approveEvent = event
@@ -211,17 +230,21 @@ class CandidateView(viewsets.ModelViewSet):
 
         return Response({"candidate": self.get_serializer(cand).data,"event": serializer.data}, status=201)
     
+# smart scheduling engine
+# greedy scoring based planner
 class SmartPlanView(APIView):
     def post(self, request):
         SmartSerializer = SmartPlanSerializer(data=request.data)
         SmartSerializer.is_valid(raise_exception=True)
         data = SmartSerializer.validated_data
 
+        #only pending candidates
         CandidateSet = ExtractedEventCandidate.objects.filter(
             status=ExtractedEventCandidate.Status.pending,
             document_id__in=data["GetDocumentIds"]
         )
 
+        #option to include existing events in conflict scoring
         if data["ExistingEvents"]:
             existing = list(Event.objects.all())
         else:
@@ -235,7 +258,8 @@ class SmartPlanView(APIView):
                 return float(c.confidence)
             else:
                 return 0.5
-            
+
+        #compute interval overlap in minutes 
         def getOverlappingMinutes (Astart, Aend, Bstart, Bend):
             Latest = max(Astart, Bstart)
             Earliest = min(Aend, Bend)
@@ -243,7 +267,7 @@ class SmartPlanView(APIView):
                 return 0.0
             return (Earliest - Latest).total_seconds() / 60.0
             
-
+        #longer duration first
         def SortCandidates(Sortkey):
             if Sortkey.start_time and Sortkey.end_time and Sortkey.end_time > Sortkey.start_time:
                 duration = (Sortkey.end_time - Sortkey.start_time).total_seconds()
@@ -251,6 +275,7 @@ class SmartPlanView(APIView):
                 duration = -1
             return (-duration, -candConfidence(Sortkey), Sortkey.start_time or timezone.now())
         
+        #avoid duplicate groups
         def GroupKey(c):
             title = (c.title or "").strip().lower()
             if not c.start_time or not c.end_time:
@@ -270,34 +295,45 @@ class SmartPlanView(APIView):
                     merged[-1][1] = max(merged[-1][1], end)
             return [(start, end) for start, end in merged]
 
+
         def GetGapOptions(Target, Duration, Busy, GapStart, GapEnd, MaxGapOptions = 10):
             GetGapStart = []
             for start, end in Busy:
                 if end <= GapStart or start >= GapEnd:
                     continue
                 GetGapStart.append((max(start, GapStart), min(end, GapEnd)))
+            # Merge overlapping busy intervals to simplify gap detection
             busy = MergeIntervals(GetGapStart)
 
+            #artificial boundary markers at window edges
             timeline = [(GapStart, GapStart)] + busy + [(GapEnd, GapEnd)]
             candidates = []
             DurationSeconds = Duration.total_seconds()
 
-            for i in range(len(timeline) - 1):
+            for i in range(len(timeline) - 1): #detect free gaps in intervals
+
+                #gap lies between end two blocks
                 GapStart = timeline[i][1]
                 GapEnd = timeline[i + 1][0]
 
+                #skip invalid gaps
                 if GapEnd <= GapStart:
                     continue
 
+                #skip gaps too small
                 if (GapEnd - GapStart).total_seconds() < DurationSeconds:
                     continue
-
+                
+                # place event at beginning of gap
                 start1 = GapStart
                 event1 = start1 + Duration
 
+                # place event at end of gap
                 Start2 = GapEnd - Duration
                 event2 = GapEnd
 
+
+                # stay close to original target
                 Start3 = Target
                 if Start3 < GapStart:
                     Start3 = GapStart
@@ -305,10 +341,15 @@ class SmartPlanView(APIView):
                     Start3 = GapEnd - Duration
                 event3 = Start3 + Duration
 
+
+                # using set in order for avoid duplicate placements
                 for start, end in {(start1, event1), (Start2, event2), (Start3, event3)}:
+
+                    #compute how far we've moved from original time
                     moved = abs((start - Target).total_seconds()) / 60.0
                     candidates.append((start, end, moved))
             
+            # deduplicate and keep minimal move distance
             best = {}
             for start, end, moved in candidates:
                 key = (start, end)
@@ -316,18 +357,21 @@ class SmartPlanView(APIView):
                     best[key] = moved
             
             options = [(start, end, best[(start, end)]) for (start, end) in best.keys()]
-            options.sort(key=lambda x: x[2]) 
+            options.sort(key=lambda x: x[2]) #we prefer minimal movement from origin
             return options[:MaxGapOptions]
 
 
+        #convert queryset to list
         candidates = list(CandidateSet)
-        candidates.sort(key=SortCandidates)
+        candidates.sort(key=SortCandidates) #sort
         
-        selected_ranges = []
-        selectedGroups = set()
+        selected_ranges = []        #track time intervals
+        selectedGroups = set()      #prevent dupes
 
-        for cand in candidates:
-            if not cand.title:
+
+        for cand in candidates: #selection loop
+            #validation filters
+            if not cand.title: 
                 skipped.append({"candidate_id": cand.id, "reason": "no_title"})
                 continue
     
@@ -341,12 +385,14 @@ class SmartPlanView(APIView):
 
             confidece = candConfidence(cand)
             duration = cand.end_time - cand.start_time
-
+            
+            # original time as default option
             options = [(cand.start_time, cand.end_time, 0)]
             if data["AllowReschedule"] and data["MaxTimeShift"] > 0:
                 StartWindow = cand.start_time - timedelta(minutes=data["MaxTimeShift"])
                 EndWindow = cand.start_time + timedelta(minutes=data["MaxTimeShift"])
 
+                # busy interval list
                 BusyIntervals = []
                 if data["ExistingEvents"]:
                     BusyIntervals.extend((event.start_time, event.end_time) for event in existing)
@@ -356,30 +402,40 @@ class SmartPlanView(APIView):
 
                 options.extend(GapOptions)
             
+            ## Scoring
+
             BestOption = None
             BestScore = None
             BestExistingOverlap = 0.0
             BestSelectedOverlap = 0.0
-            SkipScore = -(data["SkipPenalty"] * confidece)
+            SkipScore = -(data["SkipPenalty"] * confidece) #skip event if score below threshold
             ScoredOptions = []
             BestBufferRule = 0.0
 
             for OptionalStart, OptionalEnd, moved in options:
+                # compute overlap with existing events
                 ExistingOverlapMinutes = 0.0
                 for event in existing:
                     ExistingOverlapMinutes += getOverlappingMinutes(OptionalStart, OptionalEnd, event.start_time, event.end_time)
 
+                # compute overlap with selected canditates
                 SelectedOverlapMinutes = 0.0
                 for start, end in selected_ranges:
                     SelectedOverlapMinutes += getOverlappingMinutes(OptionalStart, OptionalEnd, start, end)
 
+                #convert minutes to hours
                 ExistingOverlap = ExistingOverlapMinutes / 60.0
                 SelectedOverlap = SelectedOverlapMinutes / 60.0
                     
+                #positive contr.
                 Benefit = data["ConfidenceWeight"] * confidece
                 penalties = 0.0
+                #penalize movement
                 penalties += data["MovePenalty"] * moved
+                #penalize conflicts
                 penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
+
+                #enforce gap between events
                 BufferMinutes = data["BufferTime"]
                 BufferPenalty = data["BufferPenalty"]
                 BufferRule = 0.0
@@ -396,7 +452,7 @@ class SmartPlanView(APIView):
     
                 if BufferRule > 0:
                     penalties += BufferPenalty
-
+                #abide work hours and weekends
                 if data["WorkHours"]:
                     WorkStart = data["WorkStart"]
                     WorkEnd = data["WorkEnd"]
@@ -406,15 +462,17 @@ class SmartPlanView(APIView):
                     if data["AvoidWeekends"] and OptionalStart.weekday() >= 5:
                         penalties += data["WeekendPenalty"]
 
-                score = Benefit - penalties
+                score = Benefit - penalties #final score
 
+
+                # track best scoring option
                 if BestScore is None or score > BestScore:
                     BestScore = score
                     BestOption = (OptionalStart, OptionalEnd, moved)
                     BestExistingOverlap = ExistingOverlap
                     BestSelectedOverlap = SelectedOverlap
                     BestBufferRule = BufferRule
-                
+
                 ScoredOptions.append({
                     "start": OptionalStart,
                     "end": OptionalEnd,
@@ -422,8 +480,9 @@ class SmartPlanView(APIView):
                     "score": score,
                 })
 
+                # descending sort
             ScoredOptions.sort(key=lambda x: x["score"], reverse=True)
-            
+            # skip if BestScore not strong enough
             if BestScore is None or BestScore <= SkipScore:
                 skipped.append({
                     "candidate_id": cand.id,
@@ -435,7 +494,9 @@ class SmartPlanView(APIView):
             
             ChosenStart, ChosenEnd, moved = BestOption
 
-            AlternativeRule = 2
+
+            #generate alternatives
+            AlternativeRule = 2 #tolerance window
 
             AlternativesExist = any(opt["score"] >= BestScore - AlternativeRule and not (opt["start"] == ChosenStart and opt["end"] == ChosenEnd) for opt in ScoredOptions)
             NeedsAlternatives = (
@@ -450,11 +511,14 @@ class SmartPlanView(APIView):
             ]
             Alternatives = FilterAlternatives[:3] if NeedsAlternatives else []
 
+            # prevent dupes
             Gkey = GroupKey(cand)
             if Gkey in selectedGroups:
                 skipped.append({"candidate_id": cand.id, "reason": "Already in alternative group"})
                 continue
 
+
+            #accept candidate
             selected.append({
                 "candidate_id": cand.id,
                 "title": cand.title,

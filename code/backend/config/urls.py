@@ -21,9 +21,12 @@ from django.urls import path, include
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    # COre event-related API endpoints
     path("api/", include("calendarapp.api_urls")),
+    # File upload and extraction endpoints
     path('api/', include('ingestion.urls')),
 ]
 
+# Serve uploaded media files during development
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

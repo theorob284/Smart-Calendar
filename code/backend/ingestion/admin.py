@@ -1,6 +1,7 @@
 from django.contrib import admin
 from .models import *
 
-# Register your models here.
+# Enable Event and ConflictRecord management via Django admin
+
 admin.site.register(Document)
 admin.site.register(ExtractedEventCandidate)

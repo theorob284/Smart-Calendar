@@ -21,6 +21,7 @@ class EventSerializer(serializers.ModelSerializer):
             "confidence",
         ]
 
+    # Cross-field validation
     def validate(self, data):
         val_title = data.get("title")
         if not val_title:

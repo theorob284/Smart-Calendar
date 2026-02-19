@@ -8,7 +8,7 @@ from datetime import timedelta
 from dateutil import parser as dparse
 
 def parse_ics(file_path):
-    
+    #Parses .ics calendar file and extracts components (VEVENT)
     results = []
 
     with open(file_path, "rb") as f:
@@ -18,6 +18,7 @@ def parse_ics(file_path):
         if component.name != "VEVENT":
             continue
 
+        # extract ICS fields
         title = str(component.get("summary", ""))
 
         dtstart = component.get("dtstart")
@@ -40,7 +41,7 @@ def parse_ics(file_path):
             "start_time": start_dt,
             "end_time": end_dt,
             "location": location,
-            "confidence": 1.0,
+            "confidence": 1.0,  # ICS data considered high confidence
             "description": description,
             "event_type": event_type,
         })
@@ -53,11 +54,13 @@ def parse_ics(file_path):
 # PDF and OCR Extraction logic
 #------------------------------------------
 
+# date patterns
 monthRegex = r"(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:t)?(?:ember)? |Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)"
 weekdayRegex = r"(?:Mon(?:day)?|Tue(?:sday)?|Wed(?:nesday)?|Thu(?:rsday)?|Fri(?:day)?|Sat(?:urday)?|Sun(?:day)?)"
 dayRegex = r"\d{1,2}(?:st|nd|rd|th)?"
 yearRegex = r"(?:\d{2}|\d{4})"
 
+#common date formats
 datePattern = [
     rf"\b{monthRegex}\s+{dayRegex},?\s+{yearRegex}\b", # e.g. March 3, 2026 / March 12th 2026 / March 5th, 2026
     rf"\b{dayRegex}\s+{monthRegex},?\s+{yearRegex}\b", # 4 March 2026 / 09 March 2026 / 4th March 2026
@@ -68,8 +71,11 @@ datePattern = [
     rf"\b\d{{1,2}}-{monthRegex}-{yearRegex}\b",# e.g. 4-Mar-2026 / 04-March-26
 ] 
 
+#time formats (12 and 24 hr)
 timeRegex = r"\b\d{1,2}:\d{2}\s*(?:AM|PM|am|pm)\b"
 Hour24Regex = r"\b(?:[01]?\d|2[0-3]):[0-5]\d(?:\:[0-5]\d)?\b"
+
+#time ranges
 timeRangeRegex = rf"(?:from\s+)?({timeRegex}|{Hour24Regex})\s*(?:to|-|–)\s*({timeRegex}|{Hour24Regex})"
 
 # Locations
@@ -81,6 +87,8 @@ locationLabelledRegex = rf"""\b(?:location|venue|address)\s*:\s*(?P<labelled>.+?
 locationPrepositionRegex = rf"""\b(?:in|at|inside|to|across)\s+(?:the\s+)?(?P<place>{CommonLocationsRegex} | {CheckRoom} | {campusOutlierCheck} | (?:[A-Z][\w&'\-\.]*\s*){{1,8}}) (?=[\.,;\n]|$)"""
 locationRegex = re.compile(locationLabelledRegex + "|" + locationPrepositionRegex, re.I | re.VERBOSE)
 
+
+# extracts raw text from all PDF pages using pdfplumber
 def extractPDF(path):
     text_parts = []
     with pdfplumber.open(path) as pdf:
@@ -90,10 +98,12 @@ def extractPDF(path):
                 text_parts.append(page_text)
         return "\n".join(text_parts)
     
+#split text into sentences
 def _SplitSenteces(text):
     splitted = re.split(r"(?<=[\.\!\?])\s+", text.strip())
     return [s.strip() for s in splitted if s.strip()]
 
+#return first matching date string
 def _FindDate(sentence):
     for pattern in datePattern:
         find = re.search(pattern, sentence)
@@ -105,12 +115,14 @@ def _GetSingleTime(sentence):
     find = re.search(rf"({timeRegex}|{Hour24Regex})", sentence)
     return find.group(0) if find else None
 
+#return if time range detected
 def _FindTimeRange(sentence):
     find = re.search(timeRangeRegex, sentence)
     if find:
         return find.group(1), find.group(2)
     return None, None
 
+#extract and clean potential location references
 def _FindLocation(sentence):
     sentence = re.sub(r"\s+", " ", sentence).strip()
 
@@ -132,6 +144,8 @@ def _FindLocation(sentence):
     loc = re.split(r"(?ix)\s+\b(?:at|from|to|by|starting|start)\b\s+", loc, maxsplit=1)[0].strip(" ,.-")
     return loc
 
+
+#extract a meaningful event title from text
 def _GuessTitle(sentence, date, start, loc):
     original_sentence = sentence
     sentence = re.sub(r"\s+", " ", sentence).strip()
@@ -214,6 +228,8 @@ def _GuessTitle(sentence, date, start, loc):
 
     return (sentence[:60] or "Imported event").strip()
 
+
+#Contverts raw extracted text into structured event candidates:
 def ExtractedTextToEvent(text, defaultDuration: int = 60):
     
     candidates = []
@@ -221,7 +237,9 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
     #sentences = _SplitLines(text)
     currentDate = None
 
+    #Usese regex-based detection
     for sent in sentences:
+    # Try to detect date and time within each sentence
         sent = re.sub(r"\s+", " ", sent).strip()
         date = _FindDate(sent)
         if date:
@@ -229,6 +247,7 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
 
         StartTime, EndTime = _FindTimeRange(sent)
 
+        #prefer time range as to single time
         if StartTime and EndTime:
             useDate = date or currentDate
             if not useDate:
@@ -248,7 +267,7 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
         
         location = _FindLocation(sent)
         if location:
-            confidence += 0.05
+            confidence += 0.05   # Increase confidence slightly if location found
         
         title = _GuessTitle(sent, date or currentDate, StartTime or _GetSingleTime(sent), location)
 
@@ -261,14 +280,15 @@ def ExtractedTextToEvent(text, defaultDuration: int = 60):
             "description": "",
             "event_type": ""
         })
-
+    #Returns a list of candidate dictionaries
     return candidates
 
+#use Tesseract OCR to extract text from images
 def extractOCR(image):
     # Tesseract docs: https://tesseract-ocr.github.io/tessdoc/
     text_parts = []
     img = Image.open(image)
-
+    #upscale image to improve recognition accuracy
     img = img.resize((img.width * 2, img.height * 2), Image.Resampling.LANCZOS)
     text = pytesseract.image_to_string(img, config="--psm 6")
     if text:

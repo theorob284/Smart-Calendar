@@ -32,20 +32,26 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
-    'calendarapp',
-    'corsheaders',
+
+    # Custom project apps
+    'calendarapp',              # Handles core event logic and even APIs
+    'ingestion',                # Handles file uploads and data extraction pipeline
+
+    # Third-part apps
+    'corsheaders',              # Enables CORS so frontend can call the API
+    'rest_framework',            # Django REST Framework for building API endpoints
+
+    # Default Django apps
     'django.contrib.admin',
-    'django.contrib.auth',
+    'django.contrib.auth',          
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'ingestion',
-    'rest_framework',
 ]
 
 MIDDLEWARE = [
-    'corsheaders.middleware.CorsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',    # Must be high to allow cross-origin API calls
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -77,6 +83,8 @@ WSGI_APPLICATION = 'config.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
+
+# Using SQLite for simplicity during development
 
 DATABASES = {
     'default': {
@@ -110,11 +118,15 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
+
+# All events stored in UTC to avoid timezone conflicts
+
 TIME_ZONE = 'UTC'
+
+USE_TZ = True
 
 USE_I18N = True
 
-USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
@@ -128,6 +140,7 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #### FOR DEVELOPMENT ONLY
+# Allow frontedn (running on different port) to access backend API
 CORS_ALLOW_ALL_ORIGINS = True
 
 CORS_ALLOWED_ORIGINS = [
@@ -136,5 +149,7 @@ CORS_ALLOWED_ORIGINS = [
   "http://localhost:8000",
 ]
 
+
+# Media configuration for uploaded files (PDFs, images, etc.)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / "media"

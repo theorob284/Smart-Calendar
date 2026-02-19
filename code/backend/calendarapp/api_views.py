@@ -9,11 +9,14 @@ from rest_framework.exceptions import ValidationError
 from .utils import CreateConflictRecord
 
 class EventViewSet(viewsets.ModelViewSet):
-    #queryset = Event.objects.all().order_by("start_time") 
+    #proveides create, retrieve, update, delete and list endpoints
     serializer_class = EventSerializer
 
+    # restricting allowed ordering fields
     ordered_Fields = {"start_time", "end_time", "title", "location", "event_type", "description"}
 
+
+    # create event and check for conflict
     def perform_create(self, serializer):
         event = serializer.save()
         CreateConflictRecord(event)
@@ -39,6 +42,8 @@ class EventViewSet(viewsets.ModelViewSet):
         if description:
             queryset = queryset.filter(description=description)
 
+
+        # date-range filtering (for FullCalendar)
         start_param = self.request.query_params.get("start")
         end_param = self.request.query_params.get("end")
 
@@ -53,6 +58,7 @@ class EventViewSet(viewsets.ModelViewSet):
             if start_dateTime is None or end_dateTime is None:
                 raise ValidationError( {"Error: Either start datetime or end datetime in incorrect format: start={start_param}, end={end_param}"})
             
+            #Ensure timezone-aware datetimes when using TZ
             if settings.USE_TZ:
                 if is_naive(start_dateTime):
                     start_dateTime = make_aware(start_dateTime)
@@ -62,8 +68,11 @@ class EventViewSet(viewsets.ModelViewSet):
             if end_dateTime <= start_dateTime:
                 raise ValidationError({"Error: End date time must happen after Start time"})
             
+            # overlapping interval query
             queryset = queryset.filter(start_time__lt=end_dateTime, end_time__gt=start_dateTime)
 
+
+        # controlled ordering
         ordering = self.request.query_params.get("ordering", "start_time")
 
         raw_field = ordering.lstrip("-")
