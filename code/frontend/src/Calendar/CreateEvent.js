@@ -3,6 +3,7 @@ import "../CSS/EventModal.css"
 import Modal from "../Components/Modal";
 
 const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
+  const [error, setError] = useState("");
 
   const [formData, setFormData] = useState({
     title: "",
@@ -30,10 +31,37 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
       });
   }}, [selectedEvent]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setError("");
+    }
+  }, [isOpen]);
+
+
   if (!isOpen) return null;
 
   const handleChange = (e) => {setFormData({ ...formData, [e.target.name]: e.target.value });};
-  const handleSubmit = () => {onSave(formData);};
+  const handleSubmit = () => {
+    setError("");
+    if (!formData.title.trim()) {
+      setError("Title is required");
+      return;
+    }
+    
+    if (!formData.start_time || !formData.end_time) {
+      setError("Start and end times are required")
+      return;
+    }
+
+    const start = new Date(formData.start_time)
+    const end = new Date(formData.end_time)
+
+    if (end <= start){
+      setError("End time must be after start time")
+      return;
+    }
+    onSave({...formData, title: formData.title.trim()});
+  };
 
   return (
     <Modal open={isOpen} title={selectedEvent?.id ? "Edit Event" : "Create Event"} onClose={onClose}>
@@ -71,6 +99,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
             <span>Description</span>
             <input name="description" maxLength={400} value={formData.description} onChange={handleChange}/>
         </label>
+        {error && <div className="modalError">{error}</div>}
 
         <div className="modalFooter">
           <button className="btnPrimary" onClick={handleSubmit}> Save</button>

@@ -138,3 +138,7 @@
 .fullWidth {
   grid-column: 1 / -1;
 }
+
+.errorText {
+  color: #e74c3c;
+}

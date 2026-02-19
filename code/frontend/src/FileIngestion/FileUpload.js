@@ -61,7 +61,7 @@ export default function Upload({onUploaded}) {
       if (docId) navigate(`/review/${docId}`);
     } catch (e) {
       console.error(e);
-      setStatus("Upload failed");
+      setStatus("Upload failed - Ensure file is PDF, Calendar or Image");
     }
   };
 
