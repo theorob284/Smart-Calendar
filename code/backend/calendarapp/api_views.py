@@ -6,11 +6,13 @@ from django.utils.dateparse import parse_datetime
 from django.utils.timezone import is_naive, make_aware
 from django.conf import settings
 from rest_framework.exceptions import ValidationError
+from rest_framework.permissions import IsAuthenticated
 from .utils import CreateConflictRecord
 
 class EventViewSet(viewsets.ModelViewSet):
     #proveides create, retrieve, update, delete and list endpoints
     serializer_class = EventSerializer
+    permission_classes = [IsAuthenticated]
 
     # restricting allowed ordering fields
     ordered_Fields = {"start_time", "end_time", "title", "location", "event_type", "description"}
@@ -18,11 +20,11 @@ class EventViewSet(viewsets.ModelViewSet):
 
     # create event and check for conflict
     def perform_create(self, serializer):
-        event = serializer.save()
+        event = serializer.save(owner=self.request.user)
         CreateConflictRecord(event)
 
     def get_queryset(self):
-        queryset = Event.objects.all()
+        queryset = Event.objects.filter(owner=self.request.user)
 
         #optional field filters
         # location, time, group, title, event_type 

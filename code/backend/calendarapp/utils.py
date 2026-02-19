@@ -18,6 +18,7 @@ def CreateConflictRecord(new_event: Event):
     
     # find events that overlap with the new event
     overlap = Event.objects.filter(
+        owner=new_event.owner,
         start_time__lt = new_event.end_time,
         end_time__gt=new_event.start_time,
     ).exclude(id=new_event.id)

@@ -37,5 +37,5 @@ class SmartPlanSerializer(serializers.Serializer):
     WorkHours = serializers.BooleanField(default=False)
 
     # buffer constraints between scheduled items
-    BufferTime = serializers.IntegerField(default=10, min_value=10)
+    BufferMinutes = serializers.IntegerField(default=10, min_value=0)
     BufferPenalty = serializers.FloatField(default=3.0)

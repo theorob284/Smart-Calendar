@@ -3,6 +3,11 @@ import React from 'react';
 import '../CSS/Navbar.css';
 
 const Navbar = () => {
+  const logout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    window.location.href = "/login";
+  };
   return (
     <nav className="navbar">
       <div className="navbar-left">
@@ -15,6 +20,7 @@ const Navbar = () => {
       </div>
       <div className="navbar-right">
         <h5>Personalise your Calendar</h5>
+        <button className="logoutBtn" onClick={logout}>Logout</button>
       </div>
     </nav>
   );
