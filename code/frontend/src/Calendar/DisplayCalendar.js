@@ -7,7 +7,7 @@ import multiMonthPlugin from '@fullcalendar/multimonth'
 import interactionPlugin from '@fullcalendar/interaction'
 import "../CSS/Calendar.css"
 
-
+//rendering calendar UI
 const MyCalendar = ({myEvents, onDateClick, onEventClick }) => {
 
   return (

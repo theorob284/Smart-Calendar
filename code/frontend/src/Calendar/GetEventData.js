@@ -7,13 +7,16 @@ import "../CSS/Calendar.css"
 
 const Calendar = () => {
 
-  const [events, setEvents] = useState([]);
-  const [modalOpen, setModalOpen] = useState(false)
-  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [events, setEvents] = useState([]);  // store all events from backend
+  const [modalOpen, setModalOpen] = useState(false) //open modal
+  const [selectedEvent, setSelectedEvent] = useState(null)  //store current event
 
+  //get data from API
   const GetData = () => {AxiosInstance.get("api/events/").then((res) => setEvents(res.data))}
 
   useEffect(() => { GetData() }, []);
+
+  //creaate new event
   const handleDateClick = (info) => {
     setSelectedEvent(null);
     setSelectedEvent({
@@ -27,6 +30,7 @@ const Calendar = () => {
     setModalOpen(true);
   }
 
+  //edit event
   const handleEventClick = (info) => {
     setSelectedEvent({
       id: info.event.id,
@@ -40,18 +44,18 @@ const Calendar = () => {
     setModalOpen(true);
   };
 
-
+  //save event
   const handleSave = (data) => {
 
     const formattedData = {...data, start_time: data.start_time + ":00", end_time: data.end_time + ":00",};
 
-    if (selectedEvent?.id) {
+    if (selectedEvent?.id) { //update event
       AxiosInstance.put(`api/events/${selectedEvent.id}/`, formattedData).then(() => {GetData(); setModalOpen(false)});
-    } else {
+    } else {  // create new event
       AxiosInstance.post("api/events/", formattedData).then(() => {GetData(); setModalOpen(false)});
     };
   };
-
+ // delete event
   const handleDelete = () => {
     AxiosInstance.delete(`api/events/${selectedEvent.id}/`).then(() => {GetData(); setModalOpen(false)});
   };

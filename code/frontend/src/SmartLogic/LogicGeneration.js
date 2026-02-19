@@ -2,8 +2,10 @@ import { useState } from "react";
 import AxiosInstance from "../Calendar/AxiosInstance";
 
 export function useSmartPlan({ docID, onApplied }) {
-  const [plan, setPlan] = useState(null);
-  const [planning, setPlanning] = useState(false);
+  const [plan, setPlan] = useState(null); //stores smart plan result
+  const [planning, setPlanning] = useState(false); //shows loading state while planning
+
+  //user preference states
   const [useExisting, setUseExisting] = useState(true);
   const [allowReschedule, setAllowReschedule] = useState(false);
   const [maxTimeShift, setMaxTimeShift] = useState(60);
@@ -14,6 +16,8 @@ export function useSmartPlan({ docID, onApplied }) {
   const [avoidWeekend, setAvoidWeekend] = useState(true)
   const [bufferMinutes, setBufferMinutes] = useState(10);
 
+
+  // choose a suggested alternative slot
   const ChooseAlternative = (candidate_id, alternative) => {
     setPlan((prev) => {
       if (!prev) return prev;
@@ -27,8 +31,10 @@ export function useSmartPlan({ docID, onApplied }) {
     })
   }
 
+  //generate smart plan
   const generatePlan = async () => {
     setPlanning(true)
+  // default penalty values
     let conflictPenalty = 1.0;
     let movePenalty = 0.05;
     let skipPenalty = 2.0;
@@ -36,7 +42,7 @@ export function useSmartPlan({ docID, onApplied }) {
     let weekendPenalty = 10.0;
     let BufferPenalty = 3.0
 
-
+// light mode (less strict)
     if (strictness === 0){
         conflictPenalty = 0.5;
         movePenalty = 0.02;
@@ -45,7 +51,7 @@ export function useSmartPlan({ docID, onApplied }) {
         weekendPenalty = 2.0;
         BufferPenalty = 1.0
     }
-
+    //strict mode
     if (strictness === 2) {
         conflictPenalty = 2.5;
         movePenalty = 0.1;
@@ -56,6 +62,7 @@ export function useSmartPlan({ docID, onApplied }) {
     }
 
     try {
+      // send preferences to backend smart planner
       const res = await AxiosInstance.post("/api/smart/plan/", {GetDocumentIds: [Number(docID)],ExistingEvents: useExisting, AllowReschedule: allowReschedule, MaxTimeShift: maxTimeShift, ConflictPenalty: conflictPenalty, 
             MovePenalty: movePenalty, SkipPenalty: skipPenalty, outsideWorkPenalty, weekendPenalty,
             WorkStart: workStartHour, WorkEnd: workEndHour, AvoidWeekends: avoidWeekend, WorkHours: useWorkHours,
@@ -64,17 +71,18 @@ export function useSmartPlan({ docID, onApplied }) {
     } finally { setPlanning(false);}
   };
 
+  //apply selected plan to calendar
   const applyPlan = async () => {
     if (!plan?.selected?.length) return;
 
-    for (const item of plan.selected) {
+    for (const item of plan.selected) { //accept candidates
         await AxiosInstance.post(`/api/candidates/${item.candidate_id}/accept/`, {start_time: item.start_time, end_time: item.end_time});
     }
     setPlan(null);
-    if (onApplied) await onApplied();
+    if (onApplied) await onApplied(); // refresh parent component
   };
-  const clearPlan = () => setPlan(null);
-
+  const clearPlan = () => setPlan(null);  // clear current smart plan
+// return everything needed by UI
   return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness, 
         workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, ChooseAlternative};
 }

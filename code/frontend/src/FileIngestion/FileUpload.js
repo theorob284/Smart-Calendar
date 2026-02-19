@@ -5,12 +5,12 @@ import { useNavigate } from 'react-router-dom'
 import "../CSS/Upload.css"
 
 export default function Upload({onUploaded}) {
-  const [multipleFiles, setMultipleFiles] = useState([]);
-  const [status, setStatus] = useState("");
-  const [dragActive, setDragActive] = useState(false);
+  const [multipleFiles, setMultipleFiles] = useState([]);   //store files
+  const [status, setStatus] = useState("");  //upload status
+  const [dragActive, setDragActive] = useState(false); //style drag area
   const navigate = useNavigate();
 
-  const addFiles = (files) => {
+  const addFiles = (files) => { //add files and prevent dupes
     if (!files.length) return;
 
     setMultipleFiles((prev) => {
@@ -25,12 +25,12 @@ export default function Upload({onUploaded}) {
     setStatus("Files selected");
   };
 
-  const handleChange = (e) => {
+  const handleChange = (e) => {  // when selecting files using input
     const files = Array.from(e.target.files || []);
     addFiles(files);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e) => { //frag events
     e.preventDefault();
     setDragActive(true);
   };
@@ -47,6 +47,8 @@ export default function Upload({onUploaded}) {
     addFiles(files);
   };
 
+
+  //upload files to backend
   const handleUpload = async () => {
     if (!multipleFiles.length) return;
 
@@ -56,7 +58,7 @@ export default function Upload({onUploaded}) {
       setStatus(`Uploaded (${multipleFiles.length}) file(s)`);
 
       if (onUploaded) onUploaded();
-
+      // redirect to review page
       const docId = data.document?.id;
       if (docId) navigate(`/review/${docId}`);
     } catch (e) {

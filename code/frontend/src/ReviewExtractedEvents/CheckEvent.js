@@ -7,6 +7,8 @@ import "../CSS/Modal.css"
 import "../CSS/checkEvent.css"
 import "../CSS/EventModal.css"
 
+
+// check event duration (min: 5 minutes)
 function isValidDuration(start, end, mins = 5) {
   if (!start || !end) return false;
   const startDate = new Date(start);
@@ -20,16 +22,18 @@ export default function CheckExtractedEvent() {
   const navigate = useNavigate();
   const { docID } = useParams();
 
-  const [checkevent, setCheckEvent] = useState([]);
-  const [createdevents, setCreatedEvents] = useState([]);
-  const [conflictbyid, setConflictById] = useState({});
+  const [checkevent, setCheckEvent] = useState([]); // store pending candidates
+  const [createdevents, setCreatedEvents] = useState([]);  // store created events
+  const [conflictbyid, setConflictById] = useState({});  // store no. of conflicts
 
+  // accept/reject loading states
   const [accepting, setAccepting] = useState(false);
   const [counter, setCounter] = useState(0);
 
   const [rejecting, setRejecting] = useState(false);
   const [counterRej, setRejCounter] = useState(0);
 
+  //editing states
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState({
     title: "",
@@ -42,11 +46,18 @@ export default function CheckExtractedEvent() {
   const [openModal, setOpenModal] = useState(false);
 
   const isInvalidDuration = !isValidDuration(form.start_time,form.end_time,5);
+
+  // fetch pending candidates
   const GetData = useCallback(() => {AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => {setCheckEvent(res.data);});}, [docID]);
 
   useEffect(() => {GetData();}, [GetData]);
+
+  
+  // fetch existing events
   useEffect(() => {AxiosInstance.get(`/api/events/`).then((res) => {setCreatedEvents(res.data);});}, []);
 
+
+  // calculate conflicts
   const CheckConflict = () => {
     const result = {};
 
@@ -61,6 +72,7 @@ export default function CheckExtractedEvent() {
 
       let conflictCounter = 0;
 
+      // check for conflicts with events
       for (const events of createdevents) {
         if (!events.start_time || !events.end_time) continue;
         const eventStart = new Date(events.start_time).getTime();
@@ -71,6 +83,7 @@ export default function CheckExtractedEvent() {
         if (conflict) conflictCounter += 1;
       }
 
+      // check for conflicts with candidates
       for (const pend of checkevent) {
         if (pend.id === pending.id ||!pend.start_time ||!pend.end_time) continue;
 
@@ -88,7 +101,7 @@ export default function CheckExtractedEvent() {
 
   useEffect(() => {CheckConflict();}, [checkevent, createdevents]);
 
-  const updateStatus = (id) => {
+  const updateStatus = (id) => { // remove candidate after accept/reject
     setCheckEvent((prev) => {
       const updated = prev.filter((c) => c.id !== id);
       if (updated.length === 0) {
@@ -98,16 +111,19 @@ export default function CheckExtractedEvent() {
     });
   };
 
+  // accept one candidate
   const accept = async (id) => {
     await AxiosInstance.post(`/api/candidates/${id}/accept/`);
     updateStatus(id);
   };
 
+  // reject one candidate
   const reject = async (id) => {
     await AxiosInstance.post(`/api/candidates/${id}/reject/`);
     updateStatus(id);
   };
 
+  // accept all candidates
   const AcceptAll = async () => {
     setAccepting(true);
     setCounter(0);
@@ -120,6 +136,7 @@ export default function CheckExtractedEvent() {
     setAccepting(false);
   };
 
+  //reject all candidates
   const RejectAll = async () => {
     setRejecting(true);
     setRejCounter(0);
@@ -132,7 +149,7 @@ export default function CheckExtractedEvent() {
     setRejecting(false);
   };
 
-  const edit = async (id) => {
+  const edit = async (id) => { //edit candidates details
     await AxiosInstance.patch(`/api/candidates/${id}/`, {
       title: form.title,
       start_time: form.start_time,
@@ -146,7 +163,7 @@ export default function CheckExtractedEvent() {
     setEditId(null);
   };
 
-  const handleSmartApplied = async () => {
+  const handleSmartApplied = async () => { // refresh data
     GetData();
     const eventRes = await AxiosInstance.get("/api/events/");
     setCreatedEvents(eventRes.data);

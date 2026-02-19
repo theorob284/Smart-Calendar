@@ -3,6 +3,10 @@ import { useSmartPlan } from "./LogicGeneration";
 import "../CSS/SmartPlan.css";
 
 export default function SmartPlanUI({ docID, onApplied }) {
+
+  //get smart planning logicc and states
+  //render smart planning interface
+  //allow user to choose preferences
   const {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness,
     workStartHour, workEndHour, setWorkEndHour, setWorkStartHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, ChooseAlternative
    } = useSmartPlan({ docID, onApplied });

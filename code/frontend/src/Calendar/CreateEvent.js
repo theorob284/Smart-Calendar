@@ -3,8 +3,9 @@ import "../CSS/EventModal.css"
 import Modal from "../Components/Modal";
 
 const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
+  // stores error messages for validation
   const [error, setError] = useState("");
-
+  // Stores error messages for validation
   const [formData, setFormData] = useState({
     title: "",
     start_time: "",
@@ -14,6 +15,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
     description: "",
   });
 
+  // If editing an existing event, load its data into the form
   useEffect(() => {
     if (selectedEvent) {
       const formatDate = (dateString) => {
@@ -31,6 +33,8 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
       });
   }}, [selectedEvent]);
 
+
+  //clear error message when modal is closed
   useEffect(() => {
     if (!isOpen) {
       setError("");
@@ -38,9 +42,11 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
   }, [isOpen]);
 
 
-  if (!isOpen) return null;
+  if (!isOpen) return null;  //dont render anything if modal is closed
 
+   //update form values when user types
   const handleChange = (e) => {setFormData({ ...formData, [e.target.name]: e.target.value });};
+  //validate and submit the form
   const handleSubmit = () => {
     setError("");
     if (!formData.title.trim()) {
@@ -60,7 +66,7 @@ const EventModal = ({ isOpen, onClose, onSave, onDelete, selectedEvent }) => {
       setError("End time must be after start time")
       return;
     }
-    onSave({...formData, title: formData.title.trim()});
+    onSave({...formData, title: formData.title.trim()});    ///sennd valid data back to parent component
   };
 
   return (
