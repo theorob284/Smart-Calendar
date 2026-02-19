@@ -8,6 +8,7 @@ from rest_framework.decorators import action
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.exceptions import ValidationError
 
 from .models import Document, ExtractedEventCandidate
 from .serializers import DocumentSerializer, ExtractedEventCandidateSerializer, SmartPlanSerializer
@@ -25,6 +26,7 @@ class FileUploadAPIView(generics.CreateAPIView):
     def create(self, request, *args, **kwargs):
 
         #accept multiple files if needed
+        allowed_ext = [".ics", ".pdf", ".png", ".jpg", ".jpeg", ".webp"]
         files = request.FILES.getlist("files")
         if not files:
             OneFile =  request.FILES.get("file")
@@ -33,6 +35,11 @@ class FileUploadAPIView(generics.CreateAPIView):
         
         if not files:
             return Response({"detail": "No files provided."}, status=status.HTTP_400_BAD_REQUEST)
+        
+        for f in files:
+            ext = os.path.splitext(f.name.lower())[1]
+            if ext not in allowed_ext:
+                raise ValidationError({"error": "unsupported_file_type","message": f"{f.name} is not supported."})
         
         FilesTitle = request.data.get("title") or f"Upload ({len(files)} files)"
         FilesDoc = Document.objects.create(title=FilesTitle)

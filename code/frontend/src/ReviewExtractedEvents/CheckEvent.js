@@ -7,6 +7,15 @@ import "../CSS/Modal.css"
 import "../CSS/checkEvent.css"
 import "../CSS/EventModal.css"
 
+function isValidDuration(start, end, mins = 5) {
+  if (!start || !end) return false;
+  const startDate = new Date(start);
+  const endDate = new Date(end);
+  if (isNaN(startDate) || isNaN(endDate)) return false;
+
+  return endDate - startDate >= mins * 60000;
+}
+
 export default function CheckExtractedEvent() {
   const navigate = useNavigate();
   const { docID } = useParams();
@@ -32,6 +41,7 @@ export default function CheckExtractedEvent() {
   });
   const [openModal, setOpenModal] = useState(false);
 
+  const isInvalidDuration = !isValidDuration(form.start_time,form.end_time,5);
   const GetData = useCallback(() => {AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => {setCheckEvent(res.data);});}, [docID]);
 
   useEffect(() => {GetData();}, [GetData]);
@@ -199,8 +209,9 @@ export default function CheckExtractedEvent() {
                     </div>
                   </div>
 
+                  {isInvalidDuration && (<p className="errorText">End time must be at least 5 minutes after start time.</p>)}
                   <div className="checkCardActions">
-                    <button className="btnPrimary" onClick={() => edit(c.id)}>Save</button>
+                    <button className="btnPrimary" onClick={() => edit(c.id)}  disabled={isInvalidDuration} >Save</button>
                     <button className="btnGhost" onClick={() => setEditId(null)}>Cancel</button>
                   </div>
                 </>
