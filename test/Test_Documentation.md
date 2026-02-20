@@ -267,3 +267,120 @@ As well as on the backend:
 <img src="images/Week5/EditEvent.png" width="50%">
 
 The validation page is fully functional
+
+## Week 6
+
+### Calendar Smart Generation
+
+#### Test 6.1.1: Testing Modal pop up - Unit Test
+
+Upon clicking the "Smart Plan" button, the modal pops up
+
+<img src="images/Week6/SmartModal.png" >
+
+This works
+
+#### Test 6.1.2: Testing Preference field - Unit Test
+
+We need to ensure that all the preference fields work. All checkboxs work and strictness slider. We need to ensure fields with values are defined and can't introduce unexpected inputs.
+
+Unit tests:
+rescheduling events, making sure max shift can't be less than 0 or greater than 1440. This works
+Use Working hours: Time must be above 0 and less than 24, and start time must be less than end time: This works
+Event Buffer: must be greater than 0 and less than 160. This works
+
+#### Test 6.1.3 Generation of Smart Plan Button - Integration test
+
+This is testing the preferences alongside the generation
+
+Upon pressing generate smart plan button, we are presented with our smart plan. This works.
+Next we need to check different combinations of preferences to make sure they work.
+
+Unit tests: 
+Respect existing events: Accurately chooses events that fit into slots without existing events. The next few tests assume it is on
+Allow Rescheduling: Can reschedule some events into gaps as long as they are in the max shift range. This works. Asume off for following tests
+Use working Hours and Avoid weekends. This accurately schedules events within hours and avoids weekends.
+Event buffer: Adds a buffer of defined length between events
+Strictness slider: Accuratel effects score and changes what events are selected based on that
+
+#### Test 6.1.4 Testing Alternative selection - Integration test
+
+Small unit test: Ensure events suggest alternatives
+
+<img src="images/Week6/Alternatives.png" >
+
+It suggests alternatives, and only when rescheduling events is turned on.
+
+Next we need to make sure it actually changes when you click, as you can see when comparing to the previous image, it does.
+
+<img src= "images/Week6/AlternateSelect.png" >
+
+#### Test 6.1.5: Testing application of smart build - Integration Test
+
+When we apply smart build we want our events to display. This works accurately
+
+
+## Week 7
+
+This week is adding user login / register and a final system test
+
+### User Login / Registration
+
+#### Test 7.1.1 Login and registration page appear upon loading webapp - Unit Test
+
+<img src= "images/Week7/SignIn.png" >
+<img src= "images/Week7/Register.png">
+
+This works.
+
+#### Test 7.1.2 Testing Required Fields - Unit Test
+
+Users must not be able to leave register field blanks
+
+<img src= "images/Week7/RegisterBlank.png" >
+
+Password must be at least 8 characters, this works perfectly
+
+Check for valid Login details:
+
+<img src= "images/Week7/SignInValid.png">
+
+#### Test 7.1.3 Test sign in - Integration Test
+
+Upon entering correct details, the system logs the use rin and redirects them to their calendar
+
+#### Test 7.1.4 Test logout button - Integration Test
+
+This button logs the user out and re-directs them back to log in page. It works.
+
+#### Test 7.1.5 Events display per user - Integration test
+
+To test this, we create two accounts, on one, we create an event. Then we logout and sign into another account.
+This works.
+
+#### Test 7.2.1 Testing system flow - System Test
+
+With all the components in place, we need to make sure they work. there are three user flows to follow after logging in.
+
+1. Creating / editing events
+2. Importing events and applying smart plan
+3. logging out
+
+We need to make sure the whole system works together. To do this we sign in, and first import files.
+We make sure events get extracted, we can accept, reject or edit, and use the accept all or reject all. Then we do the same and check smart plan generation.
+Next we check that all events are registered through accepting, accept all and smart plan.
+Next we check that we can edit those events in the calendar view.
+Then we check if we can create new events.
+Before logging out, we need to check that the displays for each valendar view also work.
+
+Nothing breaks and it seems to work!
+
+#### Test 7.3.1 User Tests
+
+Finally we did user tests. We got users to sit down and explore our software, and see what challenges they had
+
+User 1:
+Found it mostly intuitive, but felt some of the UI elements were a little easy to miss.
+Thought the calendar could be used well for project management, Schools and families.
+Was able to discover almost all components.
+Overrall liked the design and functionality.
