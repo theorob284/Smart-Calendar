@@ -7,7 +7,6 @@ import CheckExtractedEvent from "./ReviewExtractedEvents/CheckEvent";
 import Upload from "./FileIngestion/FileUpload";
 import Login from "./Components/Login";
 import Register from "./Components/Register";
-import RequireAuth from "./Components/RequireAuth";
 
 export default function App() {
   const location = useLocation();

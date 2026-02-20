@@ -476,7 +476,7 @@ class SmartPlanView(APIView):
                 #penalize conflicts
                 penalties += data["ConflictPenalty"] * (data["ExistingConflictMulti"] * ExistingOverlap + SelectedOverlap)
                 #enforce gap between events
-                BufferMinutes = data["BufferTime"]
+                BufferMinutes = data["BufferMinutes"]
                 BufferPenalty = data["BufferPenalty"]
                 BufferRule = 0.0
 
