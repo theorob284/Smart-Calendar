@@ -390,3 +390,30 @@ Felt that the user control wasn't intuitive, as they would have liked to be able
 Found everything fine, except for the smart plan button.
 Felt the software was useful.
 Proposed the idea of being able to store pdf documents on the web app, as well as being able to convert calendars into pdfs.
+
+User 3:
+This user wasn't explained how the system works and was asked to complete the following tasks:
+
+1. Register an account
+2. Upload a file (test files were provided)
+3. Approve at least one candidate
+4. Generate a smart plan
+5. Log out
+
+In case of difficulties they could consult the user manual.
+
+They were able to successfully complete registration and login without any help.
+
+Uploading a file was also seemless, and they completed it without errors.
+
+During event validation they understood the UI clearly and were able to intuit the basic functions on their own (accept/edit/reject).
+
+Generating a smart plan was also successful, however due to it being slightly more complex they did have to consult the users manual.
+Nonetheless, with the help of the manual they were able to complete this step too.
+
+Finally logging out also went without issue.
+
+Feedback from User 3:
+- They were impressed by the smart plan and found it useful
+- Found the user manual clear and helpful
+- liked the overall design of the project
