@@ -203,6 +203,7 @@ Software:
 - Node.js (version 18 or later)
 - npm (included with Node.js)
 - Git (in case of repository cloning)
+- Tesseract OCR engine (ensure it's set on path)
 
 To verify installation run:
 
