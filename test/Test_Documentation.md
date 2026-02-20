@@ -8,9 +8,9 @@ Unit testing: testing individual components such as models and validation logic 
 
 Integration testing: testing interaction between backend, database and frontend
 
-Manual functional testing: manually testing features through UI and API endpoints
-
 System testing: Testing the whole system
+
+User testing: Testing by external user
 
 User testing: Getting people to test the system
 ## Week 1
