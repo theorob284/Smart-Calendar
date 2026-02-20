@@ -384,3 +384,9 @@ Found it mostly intuitive, but felt some of the UI elements were a little easy t
 Thought the calendar could be used well for project management, Schools and families.
 Was able to discover almost all components.
 Overrall liked the design and functionality.
+
+User 2:
+Felt that the user control wasn't intuitive, as they would have liked to be able to go back in certain places without having to move forward.
+Found everything fine, except for the smart plan button.
+Felt the software was useful.
+Proposed the idea of being able to store pdf documents on the web app, as well as being able to convert calendars into pdfs.
