@@ -7,6 +7,7 @@ import CheckExtractedEvent from "./ReviewExtractedEvents/CheckEvent";
 import Upload from "./FileIngestion/FileUpload";
 import Login from "./Components/Login";
 import Register from "./Components/Register";
+import RequireAuth from "./Components/RequireAuth";
 
 export default function App() {
   const location = useLocation();
@@ -16,10 +17,12 @@ export default function App() {
       {!hideNavbar && <Navbar />}
 
       <Routes>
-        <Route path="/" element={<Calendar />} />
-        <Route path="/review/:docID" element={<CheckExtractedEvent />} />
-        <Route path="/edit/:docID" element={<CheckExtractedEvent />} />
-        <Route path="/upload" element={<Upload />} />
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<Calendar /> } />
+          <Route path="/review/:docID" element={<CheckExtractedEvent />} />
+          <Route path="/edit/:docID" element={<CheckExtractedEvent />} />
+          <Route path="/upload" element={<Upload />} />
+        </Route>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
       </Routes>

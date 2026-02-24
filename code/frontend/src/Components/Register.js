@@ -15,12 +15,7 @@ export default function Register() {
 
     try {
       await AxiosInstance.post("api/auth/register/", { username, password });
-
-      const res = await AxiosInstance.post("api/auth/token/", { username, password });
-      localStorage.setItem("accessToken", res.data.access);
-      localStorage.setItem("refreshToken", res.data.refresh);
-
-      nav("/");
+      nav("/login");
     } catch (err) {
       const msg =err?.response?.data?.username?.[0] || err?.response?.data?.password?.[0] || "Could not register. Try a different username or a longer password.";
       setError(msg);
