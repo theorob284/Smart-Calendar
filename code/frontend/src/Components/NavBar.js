@@ -2,8 +2,9 @@
 import React from 'react';
 import '../CSS/Navbar.css';
 
+// Navigation Bar
 const Navbar = () => {
-  const logout = () => {
+  const logout = () => { // Remove users login details upon logout
     localStorage.removeItem("accessToken");
     localStorage.removeItem("refreshToken");
     window.location.href = "/login";

@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import AxiosInstance from "../Calendar/AxiosInstance";
 import "../CSS/Auth.css"
 
+// Register new users
 export default function Register() {
   const nav = useNavigate();
   const [username, setUsername] = useState("");
@@ -14,8 +15,8 @@ export default function Register() {
     setError("");
 
     try {
-      await AxiosInstance.post("api/auth/register/", { username, password });
-      nav("/login");
+      await AxiosInstance.post("api/auth/register/", { username, password }); // Api for user details
+      nav("/login"); // Go back to login page once registered
     } catch (err) {
       const msg =err?.response?.data?.username?.[0] || err?.response?.data?.password?.[0] || "Could not register. Try a different username or a longer password.";
       setError(msg);

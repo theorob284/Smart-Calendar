@@ -1,6 +1,7 @@
 import React from "react";
 import "../CSS/Modal.css";
 
+// Base layout for modals as we use a few
 export default function Modal({ open, title, onClose, children, footer }) {
   if (!open) return null;
 

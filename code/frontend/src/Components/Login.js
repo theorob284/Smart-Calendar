@@ -4,6 +4,7 @@ import AxiosInstance from "../Calendar/AxiosInstance";
 import { Link } from "react-router-dom";
 import "../CSS/Auth.css"
 
+// Login page
 export default function Login() {
   const nav = useNavigate();
   const [username, setUsername] = useState("");
@@ -15,8 +16,8 @@ export default function Login() {
     setError("");
 
     try {
-      const res = await AxiosInstance.post("api/auth/token/", { username, password });
-      localStorage.setItem("accessToken", res.data.access);
+      const res = await AxiosInstance.post("api/auth/token/", { username, password }); // Get username and password
+      localStorage.setItem("accessToken", res.data.access); // Set them to user who's logged in
       localStorage.setItem("refreshToken", res.data.refresh);
       nav("/");
     } catch (err) {

@@ -12,7 +12,7 @@ import RequireAuth from "./Components/RequireAuth";
 export default function App() {
   const location = useLocation();
   const hideNavbar = ["/login", "/register"].includes(location.pathname);
-
+  // Uses RequireAuth to say which pages users must be logged in for
   return (<>
       {!hideNavbar && <Navbar />}
 
