@@ -49,13 +49,10 @@ export default function CheckExtractedEvent() {
 
   // fetch pending candidates
   const GetData = useCallback(() => {AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`).then((res) => {setCheckEvent(res.data);});}, [docID]);
-
   useEffect(() => {GetData();}, [GetData]);
 
-  
   // fetch existing events
   useEffect(() => {AxiosInstance.get(`/api/events/`).then((res) => {setCreatedEvents(res.data);});}, []);
-
 
   // calculate conflicts
   const CheckConflict = () => {
@@ -163,11 +160,22 @@ export default function CheckExtractedEvent() {
     setEditId(null);
   };
 
-  const handleSmartApplied = async () => { // refresh data
-    GetData();
-    const eventRes = await AxiosInstance.get("/api/events/");
-    setCreatedEvents(eventRes.data);
-  };
+  const handleSmartApplied = async () => {
+  // refresh candidates
+  const res = await AxiosInstance.get(`/api/candidates/?document=${docID}&status=PENDING`);
+
+  const remaining = res.data;
+  setCheckEvent(remaining);
+
+  // refresh events
+  const eventRes = await AxiosInstance.get("/api/events/");
+  setCreatedEvents(eventRes.data);
+
+  // navigate only if nothing left
+  if (remaining.length === 0) {
+    navigate("/");
+  }
+};
 
   return (
     <div className="checkPage">
