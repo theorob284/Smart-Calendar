@@ -80,8 +80,12 @@ export function useSmartPlan({ docID, onApplied }) {
     }
     setPlan(null);
     if (onApplied) await onApplied(); // refresh parent component
+
+    
+
   };
   const clearPlan = () => setPlan(null);  // clear current smart plan
+
 // return everything needed by UI
   return {plan, planning, useExisting, setUseExisting, allowReschedule, setAllowReschedule, maxTimeShift, setMaxTimeShift, generatePlan, applyPlan, clearPlan, strictness, setStrictness, 
         workStartHour, workEndHour, setWorkStartHour, setWorkEndHour, avoidWeekend, setAvoidWeekend, useWorkHours, setUseWorkHours, bufferMinutes, setBufferMinutes, ChooseAlternative};
