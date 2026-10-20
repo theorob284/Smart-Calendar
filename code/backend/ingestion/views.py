@@ -406,8 +406,8 @@ class SmartPlanView(APIView):
         candidates = list(CandidateSet)
         candidates.sort(key=SortCandidates) #sort
         
-        selected_ranges = []        #track time intervals
-        selectedGroups = set()      #prevent dupes
+        selected_ranges = [] #track time intervals
+        selectedGroups = set() #prevent dupes
 
 
         for cand in candidates: #selection loop
